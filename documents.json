@@ -1,0 +1,36 @@
+{
+  "categories": [
+    {
+      "name": "Getting Started",
+      "emoji": "🚀",
+      "files": [
+        { "title": "Introduction", "path": "data/intro.md", "emoji": "👋", "badge": "NEW" },
+        { "title": "Setup Guide", "path": "data/setup.md", "emoji": "🛠️" },
+        { "title": "Overview", "path": "data/overview.md", "emoji": "📖" }
+      ]
+    },
+    {
+      "name": "Features",
+      "emoji": "✨",
+      "files": [
+        { "title": "Mermaid Diagrams", "path": "data/mermaid.md", "emoji": "📊", "badge": "UPDATED" },
+        { "title": "Keyboard Shortcuts", "path": "data/shortcuts.md", "emoji": "⌨️" }
+      ]
+    },
+    {
+      "name": "Advanced",
+      "emoji": "⚙️",
+      "files": [
+        { "title": "Theme Customization", "path": "data/themes.md", "emoji": "🎨" },
+        { "title": "Troubleshooting", "path": "data/troubleshooting.md", "emoji": "🐛" }
+      ]
+    },
+    {
+      "name": "Tech",
+      "emoji": "💻",
+      "files": [
+        { "title": "Claude 기술 가이드", "path": "data/claude-tech.md", "emoji": "🤖" }
+      ]
+    }
+  ]
+}

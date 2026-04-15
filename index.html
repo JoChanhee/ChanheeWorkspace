@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chanhee Workspace</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Nunito:wght@400;600;700;800&family=Open+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Highlight.js for Code Blocks -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-light.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">Chanhee Workspace</div>
+      <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search documents...">
+        <div class="search-icon">🔍</div>
+      </div>
+      <div class="header-right"></div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="main-layout">
+      
+      <!-- Left Sidebar: Document Navigation -->
+      <aside class="sidebar-left" id="sidebarLeft">
+        <h3 class="documents-title">Documents</h3>
+        <nav id="documentNav" class="document-nav">
+          <!-- Populated dynamically via JS -->
+        </nav>
+      </aside>
+
+      <!-- Center Content: Markdown Reader -->
+      <main class="content-area">
+        <div id="markdownContent" class="markdown-body">
+          <div class="empty-state">
+            Select a document from the sidebar to view.
+          </div>
+        </div>
+      </main>
+
+      <!-- Right Sidebar: Table of Contents -->
+      <aside class="sidebar-right" id="sidebarRight">
+        <div class="toc-container">
+          <h3 class="toc-title">Contents</h3>
+          <nav id="tocNav" class="toc-nav">
+            <!-- Populated dynamically via JS -->
+          </nav>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- Floating TOC Toggle -->
+    <button id="tocToggle" class="toc-toggle" title="Toggle Table of Contents">
+      <span class="icon">📑</span>
+    </button>
+
+  </div>
+
+  <!-- Scripts -->
+  <!-- Marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- DOMPurify for sanitization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+  <!-- Highlight.js for code syntax highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <!-- Mermaid for diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  
+  <!-- Custom App Logic -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
