@@ -31,6 +31,13 @@
       "files": [
         { "title": "Claude 기술 가이드", "path": "data/claude-tech.md", "emoji": "🤖" }
       ]
+    },
+    {
+      "name": "Lecture",
+      "emoji": "🎓",
+      "files": [
+        { "title": "Claude Code 마스터 클래스", "path": "data/claude-code-lecture.md", "emoji": "📖" }
+      ]
     }
   ]
 }
