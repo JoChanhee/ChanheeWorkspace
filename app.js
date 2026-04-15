@@ -45,8 +45,13 @@ async function init() {
     showLoading();
     const response = await fetch('documents.json');
     const data = await response.json();
-    documentRegistry = data.categories;
+    documentRegistry = data.categories.reverse(); // Reverse categories
     
+    // Reverse files in each category
+    documentRegistry.forEach(cat => {
+      cat.files.reverse();
+    });
+
     // Flatten files for search
     allFiles = documentRegistry.reduce((acc, cat) => {
       const filesWithCat = cat.files.map(f => ({...f, categoryName: cat.name}));
@@ -56,8 +61,14 @@ async function init() {
     renderSidebar(documentRegistry);
     hideLoading();
     
-    // Initial content if needed
-    markdownContent.innerHTML = '<div class="empty-state">Select a document from the sidebar to view.</div>';
+    // Load the most recent document by default (first in reversed list)
+    if (documentRegistry.length > 0 && documentRegistry[0].files.length > 0) {
+      const latestFile = documentRegistry[0].files[0];
+      currentActiveFile = latestFile.path;
+      loadDocument(latestFile.path);
+    } else {
+      markdownContent.innerHTML = '<div class="empty-state">Select a document from the sidebar to view.</div>';
+    }
     
     // Setup event listeners
     setupEventListeners();
