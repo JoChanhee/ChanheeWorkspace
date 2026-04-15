@@ -1,42 +1,42 @@
 {
   "categories": [
     {
-      "name": "Getting Started",
-      "emoji": "🚀",
+      "name": "Lecture",
+      "emoji": "🎓",
       "files": [
-        { "title": "Introduction", "path": "data/intro.md", "emoji": "👋", "badge": "NEW" },
-        { "title": "Setup Guide", "path": "data/setup.md", "emoji": "🛠️" },
-        { "title": "Overview", "path": "data/overview.md", "emoji": "📖" }
-      ]
-    },
-    {
-      "name": "Features",
-      "emoji": "✨",
-      "files": [
-        { "title": "Mermaid Diagrams", "path": "data/mermaid.md", "emoji": "📊", "badge": "UPDATED" },
-        { "title": "Keyboard Shortcuts", "path": "data/shortcuts.md", "emoji": "⌨️" }
-      ]
-    },
-    {
-      "name": "Advanced",
-      "emoji": "⚙️",
-      "files": [
-        { "title": "Theme Customization", "path": "data/themes.md", "emoji": "🎨" },
-        { "title": "Troubleshooting", "path": "data/troubleshooting.md", "emoji": "🐛" }
+        { "title": "[260416] Claude Code 마스터 클래스", "path": "data/260416_claude-code-lecture.md", "emoji": "📖", "badge": "NEW" }
       ]
     },
     {
       "name": "Tech",
       "emoji": "💻",
       "files": [
-        { "title": "Claude 기술 가이드", "path": "data/claude-tech.md", "emoji": "🤖" }
+        { "title": "[260416] Claude 기술 가이드", "path": "data/260416_claude-tech.md", "emoji": "🤖", "badge": "UPDATED" }
       ]
     },
     {
-      "name": "Lecture",
-      "emoji": "🎓",
+      "name": "Getting Started",
+      "emoji": "🚀",
       "files": [
-        { "title": "Claude Code 마스터 클래스", "path": "data/claude-code-lecture.md", "emoji": "📖" }
+        { "title": "[260415] Introduction", "path": "data/260415_intro.md", "emoji": "👋" },
+        { "title": "[260415] Setup Guide", "path": "data/260415_setup.md", "emoji": "🛠️" },
+        { "title": "[260415] Overview", "path": "data/260415_overview.md", "emoji": "📖" }
+      ]
+    },
+    {
+      "name": "Features",
+      "emoji": "✨",
+      "files": [
+        { "title": "[260415] Mermaid Diagrams", "path": "data/260415_mermaid.md", "emoji": "📊" },
+        { "title": "[260415] Keyboard Shortcuts", "path": "data/260415_shortcuts.md", "emoji": "⌨️" }
+      ]
+    },
+    {
+      "name": "Advanced",
+      "emoji": "⚙️",
+      "files": [
+        { "title": "[260415] Theme Customization", "path": "data/260415_themes.md", "emoji": "🎨" },
+        { "title": "[260415] Troubleshooting", "path": "data/260415_troubleshooting.md", "emoji": "🐛" }
       ]
     }
   ]

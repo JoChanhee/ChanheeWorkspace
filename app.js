@@ -45,12 +45,28 @@ async function init() {
     showLoading();
     const response = await fetch('documents.json');
     const data = await response.json();
-    documentRegistry = data.categories.reverse(); // Reverse categories
     
-    // Reverse files in each category
-    documentRegistry.forEach(cat => {
-      cat.files.reverse();
+    // Helper to extract date from title: [260416] -> 260416
+    const extractDate = (title) => {
+      const match = title.match(/\[(\d+)\]/);
+      return match ? parseInt(match[1]) : 0;
+    };
+
+    // Sort files within categories by date DESC
+    data.categories.forEach(cat => {
+      cat.files.sort((a, b) => extractDate(b.title) - extractDate(a.title));
     });
+
+    // Sort categories by their latest file's date DESC
+    data.categories.sort((a, b) => {
+      const dateA = a.files.length > 0 ? extractDate(a.files[0].title) : 0;
+      const dateB = b.files.length > 0 ? extractDate(b.files[0].title) : 0;
+      
+      // If dates are equal, keep original order (Lecture > Tech etc defined in JSON)
+      return dateB - dateA;
+    });
+
+    documentRegistry = data.categories;
 
     // Flatten files for search
     allFiles = documentRegistry.reduce((acc, cat) => {
@@ -61,7 +77,7 @@ async function init() {
     renderSidebar(documentRegistry);
     hideLoading();
     
-    // Load the most recent document by default (first in reversed list)
+    // Load the most recent document by default
     if (documentRegistry.length > 0 && documentRegistry[0].files.length > 0) {
       const latestFile = documentRegistry[0].files[0];
       currentActiveFile = latestFile.path;
