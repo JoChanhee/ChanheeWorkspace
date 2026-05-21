@@ -69,6 +69,7 @@
         background: var(--canvas);
         min-height: 100vh;
         overflow-x: hidden;
+        position: relative;
       }
 
       a {
@@ -187,7 +188,7 @@
 
       /* Border frame like clay deck */
       .page-frame {
-        position: fixed;
+        position: absolute;
         inset: clamp(8px, 1.2vw, 16px);
         border: clamp(2px, 0.2vw, 3px) solid var(--ink);
         border-radius: var(--radius-xl);
