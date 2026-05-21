@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude + Codex Developer Playbook - Claude Style</title>
+    <style>
+      /* ===========================================
+         VIEWPORT FITTING: MANDATORY BASE STYLES
+         Include this ENTIRE file in every presentation.
+         These styles ensure slides fit exactly in the viewport.
+         =========================================== */
+
+      /* 1. Lock html/body to viewport */
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+      }
+
+      html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+      }
+
+      /* 2. Each slide = exact viewport height */
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile browsers */
+        overflow: hidden; /* CRITICAL: Prevent ANY overflow */
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* 3. Content container with flex for centering */
+      .slide-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 100%;
+        overflow: hidden; /* Double-protection against overflow */
+        padding: var(--slide-padding);
+      }
+
+      /* 4. ALL typography uses clamp() for responsive scaling */
+      :root {
+        /* Titles scale from mobile to desktop */
+        --title-size: clamp(1.5rem, 5vw, 4rem);
+        --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+        --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+
+        /* Body text */
+        --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+        --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+        /* Spacing scales with viewport */
+        --slide-padding: clamp(1rem, 4vw, 4rem);
+        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --element-gap: clamp(0.25rem, 1vw, 1rem);
+      }
+
+      /* 5. Cards/containers use viewport-relative max sizes */
+      .card,
+      .container,
+      .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+      }
+
+      /* 6. Lists auto-scale with viewport */
+      .feature-list,
+      .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+      }
+
+      .feature-list li,
+      .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+      }
+
+      /* 7. Grids adapt to available space */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+      }
+
+      /* 8. Images constrained to viewport */
+      img,
+      .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+      }
+
+      /* ===========================================
+         RESPONSIVE BREAKPOINTS
+         Aggressive scaling for smaller viewports
+         =========================================== */
+
+      /* Short viewports (< 700px height) */
+      @media (max-height: 700px) {
+        :root {
+          --slide-padding: clamp(0.75rem, 3vw, 2rem);
+          --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+          --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+          --h2-size: clamp(1rem, 3vw, 1.75rem);
+        }
+      }
+
+      /* Very short viewports (< 600px height) */
+      @media (max-height: 600px) {
+        :root {
+          --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+          --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+          --title-size: clamp(1.1rem, 4vw, 2rem);
+          --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+
+        /* Hide non-essential elements */
+        .nav-dots,
+        .keyboard-hint,
+        .decorative {
+          display: none;
+        }
+      }
+
+      /* Extremely short (landscape phones, < 500px height) */
+      @media (max-height: 500px) {
+        :root {
+          --slide-padding: clamp(0.4rem, 2vw, 1rem);
+          --title-size: clamp(1rem, 3.5vw, 1.5rem);
+          --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+          --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+      }
+
+      /* Narrow viewports (< 600px width) */
+      @media (max-width: 600px) {
+        :root {
+          --title-size: clamp(1.25rem, 7vw, 2.5rem);
+        }
+
+        /* Stack grids vertically */
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===========================================
+         REDUCED MOTION
+         Respect user preferences
+         =========================================== */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.2s !important;
+        }
+
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      :root {
+        --canvas: #faf9f5;
+        --surface-soft: #f5f0e8;
+        --surface-card: #efe9de;
+        --surface-strong: #e8e0d2;
+        --ink: #141413;
+        --body: #3d3d3a;
+        --muted: #6c6a64;
+        --muted-soft: #8e8b82;
+        --hairline: #e6dfd8;
+        --primary: #cc785c;
+        --primary-active: #a9583e;
+        --teal: #5db8a6;
+        --amber: #e8a55a;
+        --success: #5db872;
+        --dark: #181715;
+        --dark-elevated: #252320;
+        --dark-soft: #1f1e1b;
+        --on-dark: #faf9f5;
+        --on-dark-soft: #a09d96;
+        --serif: "Iowan Old Style", "Noto Serif KR", "AppleMyungjo", "Nanum Myeongjo", Georgia, serif;
+        --sans: Inter, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+        --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+        --radius: 8px;
+        --radius-lg: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+      }
+
+      .slide {
+        background: var(--canvas);
+        color: var(--ink);
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(to right, rgba(20, 20, 19, 0.032) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(20, 20, 19, 0.026) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.38), transparent 72%);
+      }
+
+      .slide.dark {
+        background: var(--dark);
+        color: var(--on-dark);
+      }
+
+      .slide.coral {
+        background: var(--primary);
+        color: white;
+      }
+
+      .slide-content {
+        width: min(1180px, 100vw);
+        margin: 0 auto;
+        gap: var(--content-gap);
+        position: relative;
+        z-index: 1;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        font-weight: 400;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: clamp(2.45rem, 6vw, 5.2rem);
+        line-height: 1.03;
+        max-width: 970px;
+      }
+
+      h2 {
+        font-size: clamp(1.9rem, 4.3vw, 4.15rem);
+        line-height: 1.07;
+      }
+
+      h3 {
+        font-size: clamp(1.15rem, 2.1vw, 2rem);
+        line-height: 1.16;
+      }
+
+      b,
+      strong {
+        font-weight: 650;
+      }
+
+      code {
+        font-family: var(--mono);
+        color: inherit;
+      }
+
+      .wide {
+        max-width: 1030px;
+      }
+
+      .serif-note {
+        font-family: var(--serif);
+        font-size: clamp(1.35rem, 2.4vw, 2.4rem);
+        line-height: 1.18;
+      }
+
+      .eyebrow {
+        color: var(--primary-active);
+        font-size: clamp(0.68rem, 1vw, 0.82rem);
+        font-weight: 650;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .dark .eyebrow {
+        color: var(--amber);
+      }
+
+      .coral .eyebrow {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .subtitle,
+      .copy {
+        max-width: 760px;
+        color: var(--body);
+        font-size: clamp(1rem, 1.75vw, 1.45rem);
+        line-height: 1.52;
+      }
+
+      .dark .subtitle,
+      .dark .copy {
+        color: var(--on-dark-soft);
+      }
+
+      .coral .subtitle,
+      .coral .copy {
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .title-slide .slide-content {
+        align-items: flex-start;
+      }
+
+      .title-frame {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(310px, 0.76fr);
+        gap: clamp(1.2rem, 3vw, 3rem);
+        align-items: center;
+        width: 100%;
+      }
+
+      .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        color: var(--primary-active);
+        font-weight: 700;
+      }
+
+      .spike {
+        width: 2.35rem;
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--dark);
+        color: var(--canvas);
+        font-size: 1.25rem;
+        line-height: 1;
+      }
+
+      .title-stack {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(0.85rem, 2vh, 1.35rem);
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        max-width: 850px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2rem;
+        border: 1px solid var(--hairline);
+        border-radius: 999px;
+        background: var(--surface-card);
+        color: var(--ink);
+        padding: 0.36rem 0.78rem;
+        font-size: clamp(0.72rem, 1vw, 0.86rem);
+        font-weight: 650;
+      }
+
+      .tag.claude {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+      }
+
+      .tag.codex {
+        background: var(--dark);
+        border-color: var(--dark);
+        color: var(--on-dark);
+      }
+
+      .dark .tag {
+        background: var(--dark-elevated);
+        border-color: rgba(250, 249, 245, 0.12);
+        color: var(--on-dark);
+      }
+
+      .mockup {
+        border-radius: var(--radius-lg);
+        background: var(--dark);
+        color: var(--on-dark);
+        overflow: hidden;
+        border: 1px solid rgba(250, 249, 245, 0.08);
+      }
+
+      .mockup.cream {
+        background: var(--surface-card);
+        color: var(--ink);
+        border: 1px solid var(--hairline);
+      }
+
+      .mockup-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.78rem 1rem;
+        background: var(--dark-elevated);
+        color: var(--on-dark-soft);
+        font-size: 0.72rem;
+        font-family: var(--mono);
+      }
+
+      .cream .mockup-bar {
+        background: var(--surface-strong);
+        color: var(--muted);
+      }
+
+      .lights {
+        display: flex;
+        gap: 0.32rem;
+      }
+
+      .lights span {
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: var(--muted-soft);
+      }
+
+      .lights span:nth-child(1) {
+        background: var(--primary);
+      }
+
+      .lights span:nth-child(2) {
+        background: var(--amber);
+      }
+
+      .lights span:nth-child(3) {
+        background: var(--teal);
+      }
+
+      .mockup-body {
+        display: grid;
+        gap: 0.72rem;
+        padding: clamp(1rem, 2.2vw, 1.55rem);
+        font-family: var(--mono);
+        font-size: clamp(0.72rem, 1.1vw, 0.92rem);
+        line-height: 1.55;
+      }
+
+      .code-line {
+        display: flex;
+        gap: 0.8rem;
+        min-width: 0;
+      }
+
+      .code-line span:first-child {
+        color: var(--on-dark-soft);
+        flex: 0 0 2ch;
+      }
+
+      .cream .code-line span:first-child {
+        color: var(--muted);
+      }
+
+      .code-line span:last-child {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .accent {
+        color: var(--primary);
+      }
+
+      .teal {
+        color: var(--teal);
+      }
+
+      .amber {
+        color: var(--amber);
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1fr);
+        gap: clamp(1rem, 3vw, 2.4rem);
+        align-items: center;
+        width: 100%;
+      }
+
+      .split.reverse {
+        grid-template-columns: minmax(320px, 1fr) minmax(0, 0.9fr);
+      }
+
+      .hero {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(0.8rem, 2vh, 1.4rem);
+      }
+
+      .cards,
+      .thirds,
+      .quad,
+      .flow {
+        display: grid;
+        gap: clamp(0.7rem, 1.35vw, 1rem);
+        width: 100%;
+      }
+
+      .cards {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .thirds {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .quad {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .flow {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .panel,
+      .flow-step,
+      .prompt-box,
+      .badge-line {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--hairline);
+        background: var(--surface-card);
+        color: var(--ink);
+      }
+
+      .panel {
+        min-height: clamp(8.5rem, 22vh, 12rem);
+        padding: clamp(0.95rem, 2vw, 1.45rem);
+        display: flex;
+        flex-direction: column;
+        gap: 0.62rem;
+      }
+
+      .panel.dark-card {
+        background: var(--dark);
+        border-color: var(--dark);
+        color: var(--on-dark);
+      }
+
+      .dark .panel {
+        background: var(--dark-elevated);
+        border-color: rgba(250, 249, 245, 0.12);
+        color: var(--on-dark);
+      }
+
+      .panel b,
+      .flow-step b,
+      .badge-line b {
+        font-size: clamp(0.94rem, 1.45vw, 1.18rem);
+      }
+
+      .panel p,
+      .flow-step p,
+      .prompt-box p,
+      .badge-line p,
+      .matrix div {
+        color: var(--body);
+        font-size: clamp(0.76rem, 1.15vw, 0.94rem);
+        line-height: 1.45;
+      }
+
+      .dark .panel p,
+      .dark .flow-step p {
+        color: var(--on-dark-soft);
+      }
+
+      .panel .metric {
+        margin-top: auto;
+        color: var(--primary-active);
+        font-family: var(--serif);
+        font-size: clamp(1.7rem, 4vw, 3.4rem);
+        line-height: 1;
+      }
+
+      .flow-step {
+        min-height: clamp(8.2rem, 22vh, 11.5rem);
+        padding: clamp(0.85rem, 1.6vw, 1.2rem);
+        display: flex;
+        flex-direction: column;
+        gap: 0.46rem;
+        position: relative;
+      }
+
+      .flow-step span {
+        color: var(--primary-active);
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+
+      .flow-step::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: -0.68rem;
+        width: 0.68rem;
+        height: 1px;
+        background: var(--primary);
+      }
+
+      .flow-step:last-child::after {
+        display: none;
+      }
+
+      .badge-stack {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .badge-line {
+        display: grid;
+        grid-template-columns: 8.5rem 1fr;
+        align-items: center;
+        gap: 1rem;
+        min-height: 5.2rem;
+        padding: 0.95rem 1rem;
+      }
+
+      .badge-line code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.35rem;
+        border-radius: 999px;
+        background: var(--dark);
+        color: var(--on-dark);
+        font-size: 0.78rem;
+      }
+
+      .prompt-box {
+        min-height: clamp(9rem, 25vh, 13rem);
+        padding: clamp(1rem, 2.2vw, 1.7rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.75rem;
+      }
+
+      .prompt-box.good {
+        background: var(--dark);
+        border-color: var(--dark);
+        color: var(--on-dark);
+      }
+
+      .prompt-box.good p {
+        color: var(--on-dark-soft);
+      }
+
+      .prompt-box.good strong {
+        color: var(--on-dark);
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: 0.85fr 1fr 1fr;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: var(--surface-card);
+      }
+
+      .matrix.four {
+        grid-template-columns: 0.72fr 1fr 1fr 0.86fr;
+      }
+
+      .matrix div {
+        min-height: clamp(3.6rem, 9vh, 5.3rem);
+        padding: clamp(0.58rem, 1.25vw, 0.95rem);
+        border-right: 1px solid var(--hairline);
+        border-bottom: 1px solid var(--hairline);
+        display: flex;
+        align-items: center;
+      }
+
+      .matrix div:nth-child(3n) {
+        border-right: 0;
+      }
+
+      .matrix.four div:nth-child(3n) {
+        border-right: 1px solid var(--hairline);
+      }
+
+      .matrix.four div:nth-child(4n) {
+        border-right: 0;
+      }
+
+      .matrix .head {
+        background: var(--dark);
+        color: var(--on-dark);
+        font-weight: 700;
+      }
+
+      .matrix div:nth-last-child(-n + 3),
+      .matrix.four div:nth-last-child(-n + 4) {
+        border-bottom: 0;
+      }
+
+      .quote-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+        align-items: center;
+        gap: clamp(1rem, 3vw, 2.5rem);
+      }
+
+      .large-number {
+        color: var(--primary);
+        font-family: var(--serif);
+        font-size: clamp(5rem, 14vw, 11rem);
+        line-height: 0.8;
+      }
+
+      .source-note {
+        position: absolute;
+        left: var(--slide-padding);
+        bottom: clamp(0.72rem, 1.4vh, 1rem);
+        z-index: 2;
+        max-width: min(850px, calc(100vw - 2 * var(--slide-padding)));
+        color: var(--muted-soft);
+        font-size: clamp(0.58rem, 0.82vw, 0.74rem);
+        line-height: 1.35;
+      }
+
+      .dark .source-note,
+      .coral .source-note {
+        color: rgba(250, 249, 245, 0.58);
+      }
+
+      .slide-number {
+        position: absolute;
+        top: clamp(1rem, 3vw, 2rem);
+        right: clamp(1rem, 3vw, 2rem);
+        z-index: 3;
+        color: var(--muted-soft);
+        font-family: var(--mono);
+        font-size: clamp(0.7rem, 1vw, 0.84rem);
+      }
+
+      .dark .slide-number,
+      .coral .slide-number {
+        color: rgba(250, 249, 245, 0.54);
+      }
+
+      .progress-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 3px;
+        background: var(--primary);
+        z-index: 100;
+        transition: width 0.35s ease;
+      }
+
+      .nav-dots {
+        position: fixed;
+        right: 1.1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 90;
+        display: flex;
+        flex-direction: column;
+        gap: 0.42rem;
+      }
+
+      .nav-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        padding: 0;
+        border: 1px solid rgba(20, 20, 19, 0.28);
+        border-radius: 50%;
+        background: rgba(250, 249, 245, 0.86);
+        cursor: pointer;
+      }
+
+      .nav-dot.active {
+        background: var(--primary);
+        border-color: var(--primary);
+      }
+
+      .keyboard-hint {
+        position: fixed;
+        right: 1rem;
+        bottom: 0.85rem;
+        z-index: 90;
+        color: var(--muted-soft);
+        font-size: 0.68rem;
+        font-family: var(--mono);
+      }
+
+      .reveal,
+      .reveal-left,
+      .reveal-right,
+      .reveal-scale {
+        opacity: 0;
+        transition:
+          opacity 0.72s ease,
+          transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
+          filter 0.72s ease;
+      }
+
+      .reveal {
+        transform: translateY(22px);
+      }
+
+      .reveal-left {
+        transform: translateX(-28px);
+      }
+
+      .reveal-right {
+        transform: translateX(28px);
+      }
+
+      .reveal-scale {
+        transform: scale(0.965);
+        filter: blur(6px);
+      }
+
+      .slide.visible .reveal,
+      .slide.visible .reveal-left,
+      .slide.visible .reveal-right,
+      .slide.visible .reveal-scale {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+        filter: blur(0);
+      }
+
+      .delay-1 {
+        transition-delay: 0.08s;
+      }
+
+      .delay-2 {
+        transition-delay: 0.16s;
+      }
+
+      .delay-3 {
+        transition-delay: 0.24s;
+      }
+
+      .delay-4 {
+        transition-delay: 0.32s;
+      }
+
+      @media (max-width: 900px) {
+        .title-frame,
+        .split,
+        .split.reverse,
+        .quote-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .cards,
+        .thirds,
+        .quad,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .flow-step,
+        .prompt-box {
+          min-height: auto;
+        }
+
+        .flow-step::after {
+          display: none;
+        }
+
+        .mockup-body {
+          max-height: 32vh;
+          overflow: hidden;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .slide-content {
+          justify-content: center;
+          width: 100vw;
+          gap: 0.72rem;
+        }
+
+        h1 {
+          font-size: clamp(2.05rem, 10vw, 3.1rem);
+        }
+
+        h2 {
+          font-size: clamp(1.5rem, 7.2vw, 2.45rem);
+        }
+
+        .subtitle,
+        .copy {
+          font-size: clamp(0.88rem, 3.6vw, 1.04rem);
+        }
+
+        .brand-row {
+          gap: 0.55rem;
+        }
+
+        .spike {
+          width: 1.85rem;
+          font-size: 0.96rem;
+        }
+
+        .tag-row {
+          gap: 0.36rem;
+        }
+
+        .tag {
+          min-height: 1.75rem;
+          padding: 0.28rem 0.58rem;
+          font-size: 0.68rem;
+        }
+
+        .panel {
+          gap: 0.32rem;
+          padding: 0.72rem;
+        }
+
+        .cards,
+        .thirds,
+        .quad {
+          gap: 0.45rem;
+        }
+
+        .flow {
+          gap: 0.38rem;
+        }
+
+        .flow-step {
+          padding: 0.58rem 0.66rem;
+          gap: 0.22rem;
+        }
+
+        .flow-step p,
+        .panel p,
+        .prompt-box p,
+        .badge-line p {
+          font-size: 0.72rem;
+          line-height: 1.3;
+        }
+
+        .panel b,
+        .flow-step b {
+          font-size: 0.86rem;
+        }
+
+        .badge-line {
+          grid-template-columns: 1fr;
+          gap: 0.5rem;
+          min-height: auto;
+          padding: 0.66rem;
+        }
+
+        .badge-line code {
+          min-height: 1.8rem;
+          justify-self: start;
+          padding: 0 0.7rem;
+        }
+
+        .matrix,
+        .matrix.four {
+          grid-template-columns: 1fr;
+        }
+
+        .matrix div,
+        .matrix.four div {
+          min-height: auto;
+          padding: 0.42rem 0.54rem;
+          border-right: 0;
+          font-size: 0.68rem;
+          line-height: 1.28;
+        }
+
+        .matrix div:nth-last-child(-n + 3),
+        .matrix.four div:nth-last-child(-n + 4) {
+          border-bottom: 1px solid var(--hairline);
+        }
+
+        .matrix div:last-child,
+        .matrix.four div:last-child {
+          border-bottom: 0;
+        }
+
+        .reveal-left,
+        .reveal-right {
+          transform: translateY(14px);
+        }
+
+        .mockup {
+          display: none;
+        }
+
+        .source-note,
+        .keyboard-hint,
+        .nav-dots {
+          display: none;
+        }
+
+        .slide-number {
+          top: 0.75rem;
+          right: 0.75rem;
+        }
+      }
+
+      @media (max-height: 700px) and (min-width: 901px) {
+        .slide-content {
+          gap: 0.9rem;
+        }
+
+        h1 {
+          font-size: clamp(2.2rem, 5.1vw, 4.35rem);
+        }
+
+        h2 {
+          font-size: clamp(1.7rem, 3.6vw, 3.15rem);
+        }
+
+        .subtitle,
+        .copy {
+          font-size: clamp(0.88rem, 1.45vw, 1.14rem);
+        }
+
+        .panel {
+          min-height: clamp(6.5rem, 19vh, 9.2rem);
+          padding: 0.9rem 1rem;
+        }
+
+        .flow-step {
+          min-height: clamp(6.4rem, 19vh, 9rem);
+          padding: 0.78rem;
+        }
+
+        .prompt-box {
+          min-height: clamp(7rem, 21vh, 10rem);
+        }
+
+        .badge-line {
+          min-height: 4.2rem;
+        }
+
+        .mockup-body {
+          gap: 0.5rem;
+          padding: 1rem;
+        }
+
+        .source-note {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav-dots" id="navDots" aria-label="Slide navigation"></nav>
+    <div class="keyboard-hint">Arrow keys / Space / Swipe</div>
+
+    <section class="slide title-slide" data-section="00 / claude style playbook">
+      <span class="slide-number">01</span>
+      <div class="slide-content">
+        <div class="title-frame">
+          <div class="title-stack">
+            <div class="brand-row reveal-left">
+              <span class="spike" aria-hidden="true">✶</span>
+              <span>Claude-inspired developer playbook</span>
+            </div>
+            <h1 class="reveal delay-1">개발자를 위한 Claude + Codex 사용법</h1>
+            <p class="subtitle reveal delay-2">
+              대화형 탐색, 계획, 구현, 검증, PR 리뷰까지. 두 도구를 경쟁시키지 말고 역할별로 배치한다.
+            </p>
+            <div class="tag-row reveal delay-3">
+              <span class="tag claude">Claude: context + plan</span>
+              <span class="tag codex">Codex: execute + verify</span>
+              <span class="tag">research-backed workflow</span>
+            </div>
+          </div>
+          <div class="mockup reveal-scale delay-2">
+            <div class="mockup-bar">
+              <div class="lights"><span></span><span></span><span></span></div>
+              <span>agent-loop.md</span>
+            </div>
+            <div class="mockup-body">
+              <div class="code-line"><span>01</span><span><span class="accent">Claude</span> clarifies context and risk</span></div>
+              <div class="code-line"><span>02</span><span><span class="teal">Codex</span> edits, runs tools, proves the diff</span></div>
+              <div class="code-line"><span>03</span><span>Human decides tradeoff, rollout, merge</span></div>
+              <div class="code-line"><span>04</span><span><span class="amber">Verifier</span> keeps the loop honest</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Research snapshot: official Anthropic and OpenAI docs plus recent empirical agent studies, accessed May 21, 2026.</p>
+    </section>
+
+    <section class="slide" data-section="01 / research synthesis">
+      <span class="slide-number">02</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">What changed</div>
+          <h2 class="wide reveal delay-1">AI 코딩은 답변 받기에서 작업 맡기기로 이동했다.</h2>
+          <div class="cards reveal delay-2">
+            <article class="panel">
+              <b>Claude Code</b>
+              <p>파일을 읽고, 명령을 실행하고, 변경하며, 계획과 컨텍스트 관리에 강하다.</p>
+              <div class="metric">01</div>
+            </article>
+            <article class="panel dark-card">
+              <b>Codex</b>
+              <p>코드를 읽고 수정하고 실행하며, 클라우드 태스크와 PR 리뷰로 확장된다.</p>
+              <div class="metric">02</div>
+            </article>
+            <article class="panel">
+              <b>검증 루프</b>
+              <p>테스트, 린트, 스크린샷, diff가 품질을 결정한다.</p>
+              <div class="metric">03</div>
+            </article>
+            <article class="panel">
+              <b>작업 분할</b>
+              <p>큰일 하나보다 작은 완료 단위를 여러 번 맡기는 방식이 안정적이다.</p>
+              <div class="metric">04</div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" data-section="02 / routing rule">
+      <span class="slide-number">03</span>
+      <div class="slide-content">
+        <div class="split">
+          <div class="hero reveal-left">
+            <div class="eyebrow">Decision rule</div>
+            <h2>먼저 무슨 일인지 보고 도구를 고른다.</h2>
+            <p class="copy">질문, 설계, 실행, 검증은 서로 다른 작업이다. 도구 선택은 모델 선호가 아니라 작업 성격에서 시작한다.</p>
+          </div>
+          <div class="mockup cream reveal-right delay-1">
+            <div class="mockup-bar">
+              <div class="lights"><span></span><span></span><span></span></div>
+              <span>routing-table</span>
+            </div>
+            <div class="matrix" style="border: 0; border-radius: 0;">
+              <div class="head">상황</div>
+              <div class="head">Claude 먼저</div>
+              <div class="head">Codex 먼저</div>
+              <div>요구가 애매함</div>
+              <div>인터뷰, 명세, 대안 비교</div>
+              <div>구현 단위로 쪼개기</div>
+              <div>코드베이스가 낯섦</div>
+              <div>구조 설명, 용어 정리</div>
+              <div>파일 추적, 실행 경로 확인</div>
+              <div>수정이 필요함</div>
+              <div>설계와 위험 검토</div>
+              <div>패치, 테스트, PR 준비</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="03 / baseline setup">
+      <span class="slide-number">04</span>
+      <div class="slide-content">
+        <div class="split">
+          <div class="hero reveal-left">
+            <div class="eyebrow">Team baseline</div>
+            <h2>팀 규칙을 파일로 남기면 에이전트 품질이 누적된다.</h2>
+            <p class="copy">Claude는 CLAUDE.md, Codex는 AGENTS.md를 읽는다. 중복은 줄이고, 빌드와 검증처럼 반복되는 규칙은 파일에 고정한다.</p>
+          </div>
+          <div class="badge-stack reveal delay-1">
+            <div class="badge-line"><code>build</code><p>자주 쓰는 빌드, 테스트, 린트 명령을 명시한다.</p></div>
+            <div class="badge-line"><code>style</code><p>팀만의 네이밍, API 규칙, PR 관례를 남긴다.</p></div>
+            <div class="badge-line"><code>quirks</code><p>코드만 봐서는 모르는 환경 변수와 장애 패턴을 기록한다.</p></div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Sources: Claude memory docs; Codex AGENTS.md and code review docs.</p>
+    </section>
+
+    <section class="slide" data-section="04 / prompt shape">
+      <span class="slide-number">05</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Prompt shape</div>
+          <h2 class="wide reveal delay-1">프롬프트는 GitHub 이슈처럼 쓰는 편이 안정적이다.</h2>
+          <div class="split reverse">
+            <div class="prompt-box reveal-left delay-2">
+              <p><strong>나쁜 요청</strong></p>
+              <p>로그인 버그 고쳐줘.</p>
+            </div>
+            <div class="prompt-box good reveal-right delay-3">
+              <p><strong>좋은 요청</strong></p>
+              <p>세션 만료 후 로그인 실패. src/auth 흐름을 보고 재현 테스트를 먼저 만든 뒤 수정. pnpm test auth로 검증.</p>
+            </div>
+          </div>
+          <div class="tag-row reveal delay-4">
+            <span class="tag">symptom</span>
+            <span class="tag">scope</span>
+            <span class="tag">constraints</span>
+            <span class="tag">verification</span>
+            <span class="tag">done criteria</span>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Sources: Anthropic best practices and OpenAI Codex prompting guidance both emphasize context, scope, and verification.</p>
+    </section>
+
+    <section class="slide coral" data-section="05 / claude lane">
+      <span class="slide-number">06</span>
+      <div class="slide-content">
+        <div class="quote-layout">
+          <div class="hero reveal-left">
+            <div class="eyebrow">Claude lane</div>
+            <h2>탐색 먼저, 계획 다음, 구현은 마지막.</h2>
+            <p class="copy">여러 파일이 걸리거나 설계가 불확실하면 먼저 읽고 질문하게 한다. Claude는 선임에게 맥락을 설명하듯 다룰 때 강해진다.</p>
+          </div>
+          <div class="panel reveal-right delay-1" style="background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); color: white;">
+            <b>Use when</b>
+            <p style="color: rgba(255,255,255,0.88);">새 저장소 온보딩, 아키텍처 파악, 큰 리팩터링 범위 산정, 스펙과 문서 초안 작성.</p>
+            <div class="large-number" style="color: white;">C</div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Source: Claude Code best practices recommend Explore -> Plan -> Implement -> Commit for uncertain or multi-file work.</p>
+    </section>
+
+    <section class="slide" data-section="06 / claude context">
+      <span class="slide-number">07</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Claude operating pattern</div>
+          <h2 class="wide reveal delay-1">Claude는 컨텍스트를 잘 주면 선임에게 물어보는 도구가 된다.</h2>
+          <div class="thirds reveal delay-2">
+            <article class="panel"><b>Ask codebase questions</b><p>이 API가 왜 이렇게 생겼나처럼 원인과 배경을 묻는다.</p></article>
+            <article class="panel"><b>Reference real files</b><p>파일, 스크린샷, 로그, URL로 추상 설명을 줄인다.</p></article>
+            <article class="panel"><b>Let it interview</b><p>큰 기능은 먼저 질문하게 해 빠진 엣지 케이스를 찾는다.</p></article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" data-section="07 / codex lane">
+      <span class="slide-number">08</span>
+      <div class="slide-content">
+        <div class="split">
+          <div class="hero reveal-left">
+            <div class="eyebrow">Codex lane</div>
+            <h2>Codex에는 완료 조건이 있는 작업을 맡긴다.</h2>
+            <p class="copy">Codex는 파일 읽기, 수정, 도구 호출을 반복한다. 무엇이 끝인지와 어떻게 확인할지가 품질을 좌우한다.</p>
+          </div>
+          <div class="mockup reveal-scale delay-1">
+            <div class="mockup-bar">
+              <div class="lights"><span></span><span></span><span></span></div>
+              <span>codex-run</span>
+            </div>
+            <div class="mockup-body">
+              <div class="code-line"><span>$</span><span>read relevant files</span></div>
+              <div class="code-line"><span>$</span><span>make scoped edits</span></div>
+              <div class="code-line"><span>$</span><span>run lint / tests / build</span></div>
+              <div class="code-line"><span>$</span><span>return diff + evidence</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Source: Codex prompting docs describe the agent loop and recommend reproducible validation, linting, and smaller focused tasks.</p>
+    </section>
+
+    <section class="slide" data-section="08 / codex cloud">
+      <span class="slide-number">09</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Codex cloud</div>
+          <h2 class="wide reveal delay-1">긴 작업은 클라우드 태스크로 분리하고, 사람은 diff를 검토한다.</h2>
+          <div class="flow reveal delay-2">
+            <div class="flow-step"><span>01</span><b>checkout</b><p>선택한 branch/SHA를 컨테이너에 체크아웃</p></div>
+            <div class="flow-step"><span>02</span><b>setup</b><p>의존성, 린터, 테스트 도구 설치</p></div>
+            <div class="flow-step"><span>03</span><b>agent loop</b><p>명령 실행, 수정, 검증 반복</p></div>
+            <div class="flow-step"><span>04</span><b>diff</b><p>결과와 변경 파일 확인</p></div>
+            <div class="flow-step"><span>05</span><b>PR</b><p>후속 질문 또는 PR 생성</p></div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Source: Codex cloud environment docs describe setup scripts, agent validation loop, AGENTS.md guidance, and final diff/PR handoff.</p>
+    </section>
+
+    <section class="slide" data-section="09 / verification">
+      <span class="slide-number">10</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Highest leverage habit</div>
+          <h2 class="wide reveal delay-1">검증 방법을 주면 두 도구 모두 훨씬 잘한다.</h2>
+          <div class="quad reveal delay-2">
+            <article class="panel"><b>Tests</b><p>실패 재현 테스트를 먼저 만들게 한다.</p></article>
+            <article class="panel"><b>Build</b><p>타입체크, 번들, 패키징 명령을 명시한다.</p></article>
+            <article class="panel dark-card"><b>Browser</b><p>UI는 스크린샷과 모바일 뷰포트로 확인한다.</p></article>
+            <article class="panel"><b>Diff</b><p>작은 diff를 리뷰하고 위험을 남긴다.</p></article>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Sources: Claude best practices call verification the highest-leverage habit; Codex prompting docs also stress validation commands.</p>
+    </section>
+
+    <section class="slide dark" data-section="10 / pr review">
+      <span class="slide-number">11</span>
+      <div class="slide-content">
+        <div class="split">
+          <div class="hero reveal-left">
+            <div class="eyebrow">Review loop</div>
+            <h2>PR 리뷰는 두 번째 고신호 리뷰어를 만드는 일이다.</h2>
+            <p class="copy">Codex는 심각한 이슈 중심 리뷰를 만들 수 있고, Claude는 PR 맥락과 CI 상태를 읽어 요약, 검증, 리뷰 댓글을 도울 수 있다.</p>
+          </div>
+          <div class="mockup reveal-scale delay-1">
+            <div class="mockup-bar">
+              <div class="lights"><span></span><span></span><span></span></div>
+              <span>review-loop</span>
+            </div>
+            <div class="mockup-body">
+              <div class="code-line"><span>01</span><span>@codex review for regressions</span></div>
+              <div class="code-line"><span>02</span><span>@codex fix the P1 issue</span></div>
+              <div class="code-line"><span>03</span><span>@claude summarize risk and test gaps</span></div>
+              <div class="code-line"><span>04</span><span>human decides merge readiness</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Sources: Codex GitHub review docs and Claude Code PR review use cases.</p>
+    </section>
+
+    <section class="slide" data-section="11 / combined loop">
+      <span class="slide-number">12</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Combined loop</div>
+          <h2 class="wide reveal delay-1">실전에서는 두 도구를 한 루프로 묶는다.</h2>
+          <div class="flow reveal delay-2">
+            <div class="flow-step"><span>Claude</span><b>clarify</b><p>요구와 제약을 질문으로 정리</p></div>
+            <div class="flow-step"><span>Claude</span><b>plan</b><p>파일 범위, 테스트 전략, 리스크 정의</p></div>
+            <div class="flow-step"><span>Codex</span><b>execute</b><p>패치와 명령 실행</p></div>
+            <div class="flow-step"><span>Codex</span><b>verify</b><p>빌드, 테스트, 스크린샷</p></div>
+            <div class="flow-step"><span>Human</span><b>decide</b><p>tradeoff, rollout, merge 판단</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="12 / safety">
+      <span class="slide-number">13</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Safety contract</div>
+          <h2 class="wide reveal delay-1">자율성을 키울수록 권한 경계도 명확해야 한다.</h2>
+          <div class="thirds reveal delay-2">
+            <article class="panel"><b>Permissions</b><p>읽기, 파일 수정, 쉘 실행, 네트워크 권한을 구분한다.</p></article>
+            <article class="panel dark-card"><b>Sandbox</b><p>격리된 환경에서 장시간 작업과 실험을 맡긴다.</p></article>
+            <article class="panel"><b>Secrets</b><p>환경 변수와 시크릿은 설정 단계와 실행 단계를 분리한다.</p></article>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Sources: Claude permission docs and Codex cloud environment docs.</p>
+    </section>
+
+    <section class="slide" data-section="13 / parallel work">
+      <span class="slide-number">14</span>
+      <div class="slide-content">
+        <div class="split">
+          <div class="hero reveal-left">
+            <div class="eyebrow">Parallel work</div>
+            <h2>병렬화는 같은 파일을 건드리지 않을 때 효과가 난다.</h2>
+            <p class="copy">조사, 리뷰, 테스트 작성, 독립 모듈 수정은 병렬화하기 좋다. 같은 파일을 동시에 수정하면 충돌 비용이 더 크다.</p>
+          </div>
+          <div class="badge-stack reveal delay-1">
+            <div class="badge-line"><code>good</code><p>문서 리뷰, 보안 리뷰, 독립 패키지 수정</p></div>
+            <div class="badge-line"><code>risky</code><p>공유 타입, 공통 라우터, 전역 스타일 동시 수정</p></div>
+            <div class="badge-line"><code>control</code><p>worktree, branch, task ownership을 먼저 나눈다.</p></div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Sources: Claude best practices on worktrees/subagents and Codex prompting docs on avoiding two threads modifying the same files.</p>
+    </section>
+
+    <section class="slide coral" data-section="14 / anti-patterns">
+      <span class="slide-number">15</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Avoid these</div>
+          <h2 class="wide reveal delay-1">실패는 대부분 모델보다 작업 설계에서 시작된다.</h2>
+          <div class="quad reveal delay-2">
+            <article class="panel" style="background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); color: white;"><b>Vague task</b><p style="color: rgba(255,255,255,0.86);">증상과 완료 조건 없이 고쳐줘만 준다.</p></article>
+            <article class="panel" style="background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); color: white;"><b>No verifier</b><p style="color: rgba(255,255,255,0.86);">테스트, 빌드, 스크린샷 없이 사람이 유일한 피드백 루프가 된다.</p></article>
+            <article class="panel" style="background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); color: white;"><b>Bloated memory</b><p style="color: rgba(255,255,255,0.86);">규칙 파일이 길어져 중요한 지시가 묻힌다.</p></article>
+            <article class="panel" style="background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); color: white;"><b>Over-permission</b><p style="color: rgba(255,255,255,0.86);">민감한 작업에 무제한 권한을 준다.</p></article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="15 / task map">
+      <span class="slide-number">16</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">Task map</div>
+          <h2 class="wide reveal delay-1">작업 유형별 기본 배치</h2>
+          <div class="matrix four reveal delay-2">
+            <div class="head">작업</div>
+            <div class="head">Claude</div>
+            <div class="head">Codex</div>
+            <div class="head">검증</div>
+            <div>새 기능</div>
+            <div>요구사항 인터뷰, 설계안</div>
+            <div>구현, 테스트, PR</div>
+            <div>기능 TC + 빌드</div>
+            <div>리팩터링</div>
+            <div>범위와 롤백 계획</div>
+            <div>마일스톤별 패치</div>
+            <div>회귀 테스트</div>
+            <div>버그</div>
+            <div>증상/원인 가설 정리</div>
+            <div>재현 테스트와 수정</div>
+            <div>실패 로그 재확인</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" data-section="16 / prompt templates">
+      <span class="slide-number">17</span>
+      <div class="slide-content">
+        <div class="split reverse">
+          <div class="prompt-box reveal-left" style="background: var(--dark-elevated); border-color: rgba(250,249,245,0.12); color: var(--on-dark);">
+            <p><strong>Claude용</strong></p>
+            <p style="color: var(--on-dark-soft);">이 저장소의 인증 흐름을 탐색해줘. 관련 파일과 세션 갱신 경로를 설명하고, 변경 전 물어봐야 할 질문을 정리해줘.</p>
+          </div>
+          <div class="prompt-box good reveal-right delay-1">
+            <p><strong>Codex용</strong></p>
+            <p>src/auth의 세션 만료 버그를 고쳐줘. 재현 테스트를 먼저 추가하고 pnpm test auth && pnpm typecheck로 검증해줘.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-section="17 / empirical note">
+      <span class="slide-number">18</span>
+      <div class="slide-content">
+        <div class="quote-layout">
+          <div class="hero reveal-left">
+            <div class="eyebrow">Research caution</div>
+            <h2>한 도구가 전부 이긴다는 결론은 아직 약하다.</h2>
+            <p class="copy">최근 PR 수용률 연구는 작업 유형별 차이를 보여준다. 도구 선택보다 라우팅과 검증 설계가 더 중요한 신호로 보인다.</p>
+          </div>
+          <article class="panel reveal-right delay-1">
+            <div class="large-number">1</div>
+            <h3>결론보다 운영 설계가 먼저다.</h3>
+          </article>
+        </div>
+      </div>
+      <p class="source-note">Source: arXiv 2602.08915, comparative analysis of 7,156 PRs across AI coding agents. Treat as one empirical signal, not a universal rule.</p>
+    </section>
+
+    <section class="slide" data-section="18 / rollout">
+      <span class="slide-number">19</span>
+      <div class="slide-content">
+        <div class="hero">
+          <div class="eyebrow reveal">30-day rollout</div>
+          <h2 class="wide reveal delay-1">팀에 도입할 때는 도구보다 운영 습관을 먼저 고정한다.</h2>
+          <div class="flow reveal delay-2">
+            <div class="flow-step"><span>Week 1</span><b>baseline</b><p>CLAUDE.md / AGENTS.md 정리</p></div>
+            <div class="flow-step"><span>Week 2</span><b>templates</b><p>버그, 기능, 리뷰 프롬프트 표준화</p></div>
+            <div class="flow-step"><span>Week 3</span><b>verification</b><p>빌드, 테스트, 스크린샷 루프 문서화</p></div>
+            <div class="flow-step"><span>Week 4</span><b>review</b><p>PR 리뷰와 자동화 범위 결정</p></div>
+            <div class="flow-step"><span>Always</span><b>prune</b><p>규칙 파일은 짧게, 실패는 기록</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide dark" data-section="19 / close">
+      <span class="slide-number">20</span>
+      <div class="slide-content">
+        <div class="title-frame">
+          <div class="title-stack">
+            <div class="eyebrow reveal">Operating principle</div>
+            <h2 class="wide reveal delay-1">Claude로 생각을 선명하게 만들고, Codex로 변경을 증명한다.</h2>
+            <p class="copy reveal delay-2">좋은 개발자 사용법은 더 많은 AI가 아니라 더 나은 작업 단위, 더 좋은 컨텍스트, 더 강한 검증 루프다.</p>
+            <div class="tag-row reveal delay-3">
+              <span class="tag claude">clarify</span>
+              <span class="tag claude">plan</span>
+              <span class="tag codex">execute</span>
+              <span class="tag codex">verify</span>
+              <span class="tag">review</span>
+            </div>
+          </div>
+          <div class="mockup reveal-scale delay-2">
+            <div class="mockup-bar">
+              <div class="lights"><span></span><span></span><span></span></div>
+              <span>ship-with-evidence</span>
+            </div>
+            <div class="mockup-body">
+              <div class="code-line"><span>✓</span><span>context captured</span></div>
+              <div class="code-line"><span>✓</span><span>patch scoped</span></div>
+              <div class="code-line"><span>✓</span><span>tests passed</span></div>
+              <div class="code-line"><span>✓</span><span>risk explained</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="source-note">Sources: Anthropic Claude Code docs and help center; OpenAI Codex developer docs and guide; arXiv empirical studies on agentic coding systems.</p>
+    </section>
+
+    <script>
+      class SlidePresentation {
+        constructor() {
+          this.slides = Array.from(document.querySelectorAll(".slide"));
+          this.currentSlide = 0;
+          this.progressBar = document.getElementById("progressBar");
+          this.navDotsContainer = document.getElementById("navDots");
+          this.touchStartY = 0;
+          this.wheelLocked = false;
+          this.setupIntersectionObserver();
+          this.setupKeyboardNav();
+          this.setupTouchNav();
+          this.setupWheelNav();
+          this.setupProgressBar();
+          this.setupNavDots();
+          this.goToSlide(0, false);
+        }
+
+        setupIntersectionObserver() {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("visible");
+                  this.currentSlide = this.slides.indexOf(entry.target);
+                  this.updateProgress();
+                  this.updateNavDots();
+                }
+              });
+            },
+            { threshold: 0.58 }
+          );
+
+          this.slides.forEach((slide) => observer.observe(slide));
+        }
+
+        setupKeyboardNav() {
+          document.addEventListener("keydown", (event) => {
+            const forwardKeys = ["ArrowDown", "ArrowRight", " ", "PageDown"];
+            const backKeys = ["ArrowUp", "ArrowLeft", "PageUp"];
+
+            if (forwardKeys.includes(event.key)) {
+              event.preventDefault();
+              this.goToSlide(this.currentSlide + 1);
+            }
+
+            if (backKeys.includes(event.key)) {
+              event.preventDefault();
+              this.goToSlide(this.currentSlide - 1);
+            }
+
+            if (event.key === "Home") {
+              event.preventDefault();
+              this.goToSlide(0);
+            }
+
+            if (event.key === "End") {
+              event.preventDefault();
+              this.goToSlide(this.slides.length - 1);
+            }
+          });
+        }
+
+        setupTouchNav() {
+          document.addEventListener(
+            "touchstart",
+            (event) => {
+              this.touchStartY = event.changedTouches[0].screenY;
+            },
+            { passive: true }
+          );
+
+          document.addEventListener(
+            "touchend",
+            (event) => {
+              const delta = this.touchStartY - event.changedTouches[0].screenY;
+              if (Math.abs(delta) < 44) return;
+              this.goToSlide(this.currentSlide + (delta > 0 ? 1 : -1));
+            },
+            { passive: true }
+          );
+        }
+
+        setupWheelNav() {
+          document.addEventListener(
+            "wheel",
+            (event) => {
+              if (Math.abs(event.deltaY) < 18 || this.wheelLocked) return;
+              this.wheelLocked = true;
+              this.goToSlide(this.currentSlide + (event.deltaY > 0 ? 1 : -1));
+              window.setTimeout(() => {
+                this.wheelLocked = false;
+              }, 620);
+            },
+            { passive: true }
+          );
+        }
+
+        setupProgressBar() {
+          window.addEventListener("scroll", () => this.updateProgress(), { passive: true });
+        }
+
+        setupNavDots() {
+          this.navDotsContainer.innerHTML = "";
+          this.slides.forEach((slide, index) => {
+            const dot = document.createElement("button");
+            dot.className = "nav-dot";
+            dot.type = "button";
+            dot.setAttribute("aria-label", `Go to slide ${index + 1}`);
+            dot.addEventListener("click", () => this.goToSlide(index));
+            this.navDotsContainer.appendChild(dot);
+          });
+          this.updateNavDots();
+        }
+
+        updateProgress() {
+          const maxIndex = Math.max(this.slides.length - 1, 1);
+          const percent = (this.currentSlide / maxIndex) * 100;
+          this.progressBar.style.width = `${percent}%`;
+        }
+
+        updateNavDots() {
+          Array.from(this.navDotsContainer.children).forEach((dot, index) => {
+            dot.classList.toggle("active", index === this.currentSlide);
+          });
+        }
+
+        goToSlide(index, smooth = true) {
+          const nextIndex = Math.max(0, Math.min(index, this.slides.length - 1));
+          this.currentSlide = nextIndex;
+          this.slides[nextIndex].scrollIntoView({
+            behavior: smooth ? "smooth" : "auto",
+            block: "start",
+          });
+          this.updateProgress();
+          this.updateNavDots();
+        }
+      }
+
+      new SlidePresentation();
+    </script>
+  </body>
+</html>

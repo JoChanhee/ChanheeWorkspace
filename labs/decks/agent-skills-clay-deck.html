@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude & Codex Skills Trend Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===========================================
+         CSS CUSTOM PROPERTIES (THEME)
+         =========================================== */
+      :root {
+        --canvas: #fffaf0;
+        --surface-soft: #faf1dd;
+        --surface-card: #fff4df;
+        --surface-strong: #eadfc8;
+        --ink: #111111;
+        --body: #3a332b;
+        --muted: #6e6253;
+        --line: #e6d8bd;
+        --dark: #102525;
+        --pink: #ff4d8b;
+        --teal: #1a3a3a;
+        --lavender: #b8a4ed;
+        --peach: #ffb084;
+        --ochre: #e8b94a;
+        --mint: #a4d4c5;
+        --coral: #ff6b5a;
+        --white: #fffdf7;
+        --shadow: 0 clamp(8px, 1.8vw, 18px) 0 rgba(17, 17, 17, 0.18);
+        --shadow-small: 0 clamp(4px, 0.9vw, 10px) 0 rgba(17, 17, 17, 0.16);
+        --radius-xl: clamp(20px, 3vw, 38px);
+        --radius-lg: clamp(16px, 2vw, 28px);
+        --font-display: "Baloo 2", cursive;
+        --font-body: "Nunito Sans", sans-serif;
+        --subtitle-size: clamp(0.85rem, 1.7vw, 1.35rem);
+        --badge-size: clamp(0.68rem, 1vw, 0.9rem);
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --duration-normal: 0.62s;
+      }
+
+      /* ===========================================
+         BASE STYLES
+         =========================================== */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* ===========================================
+         VIEWPORT FITTING: MANDATORY BASE STYLES
+         Include this ENTIRE file in every presentation.
+         These styles ensure slides fit exactly in the viewport.
+         =========================================== */
+
+      /* 1. Lock html/body to viewport */
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+      }
+
+      html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+      }
+
+      /* 2. Each slide = exact viewport height */
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* 3. Content container with flex for centering */
+      .slide-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 100%;
+        overflow: hidden;
+        padding: var(--slide-padding);
+        position: relative;
+        z-index: 2;
+      }
+
+      /* 4. ALL typography uses clamp() for responsive scaling */
+      :root {
+        --title-size: clamp(1.5rem, 5vw, 4rem);
+        --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+        --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+        --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+        --small-size: clamp(0.65rem, 1vw, 0.875rem);
+        --slide-padding: clamp(1rem, 4vw, 4rem);
+        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --element-gap: clamp(0.25rem, 1vw, 1rem);
+      }
+
+      /* 5. Cards/containers use viewport-relative max sizes */
+      .card,
+      .container,
+      .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+      }
+
+      /* 6. Lists auto-scale with viewport */
+      .feature-list,
+      .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+      }
+
+      .feature-list li,
+      .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+      }
+
+      /* 7. Grids adapt to available space */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+      }
+
+      /* 8. Images constrained to viewport */
+      img,
+      .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+      }
+
+      /* ===========================================
+         RESPONSIVE BREAKPOINTS
+         Aggressive scaling for smaller viewports
+         =========================================== */
+
+      @media (max-height: 700px) {
+        :root {
+          --slide-padding: clamp(0.75rem, 3vw, 2rem);
+          --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+          --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+          --h2-size: clamp(1rem, 3vw, 1.75rem);
+        }
+      }
+
+      @media (max-height: 600px) {
+        :root {
+          --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+          --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+          --title-size: clamp(1.1rem, 4vw, 2rem);
+          --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+
+        .nav-dots,
+        .keyboard-hint,
+        .decorative {
+          display: none;
+        }
+      }
+
+      @media (max-height: 500px) {
+        :root {
+          --slide-padding: clamp(0.4rem, 2vw, 1rem);
+          --title-size: clamp(1rem, 3.5vw, 1.5rem);
+          --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+          --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+      }
+
+      @media (max-width: 600px) {
+        :root {
+          --title-size: clamp(1.25rem, 7vw, 2.5rem);
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.2s !important;
+        }
+
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      /* ===========================================
+         PRESENTATION THEME
+         =========================================== */
+      body {
+        font-family: var(--font-body);
+        color: var(--ink);
+        background: var(--canvas);
+      }
+
+      .slide {
+        background:
+          linear-gradient(135deg, rgba(255, 176, 132, 0.16), transparent 34%),
+          linear-gradient(315deg, rgba(164, 212, 197, 0.22), transparent 38%),
+          var(--canvas);
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: clamp(10px, 1.6vw, 22px);
+        border: clamp(2px, 0.25vw, 4px) solid var(--ink);
+        border-radius: var(--radius-xl);
+        pointer-events: none;
+      }
+
+      .slide::after {
+        content: "";
+        position: absolute;
+        inset: auto clamp(16px, 4vw, 56px) clamp(14px, 2vw, 26px) auto;
+        width: clamp(80px, 13vw, 170px);
+        height: clamp(12px, 2vw, 22px);
+        background: repeating-linear-gradient(
+          90deg,
+          var(--ink) 0 14px,
+          transparent 14px 24px
+        );
+        opacity: 0.12;
+        border-radius: 999px;
+      }
+
+      .progress-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 7px;
+        background: var(--pink);
+        z-index: 40;
+        box-shadow: 0 3px 0 rgba(17, 17, 17, 0.2);
+        transition: width 0.2s ease;
+      }
+
+      .nav-dots {
+        position: fixed;
+        right: clamp(0.6rem, 1.5vw, 1.3rem);
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 35;
+        display: flex;
+        flex-direction: column;
+        gap: clamp(0.35rem, 0.8vw, 0.65rem);
+      }
+
+      .nav-dot {
+        width: clamp(11px, 1vw, 15px);
+        height: clamp(11px, 1vw, 15px);
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        background: var(--white);
+        cursor: pointer;
+        box-shadow: 2px 2px 0 rgba(17, 17, 17, 0.22);
+        transition:
+          background 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .nav-dot.active {
+        background: var(--pink);
+        transform: translateX(-2px);
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        line-height: 0.98;
+        letter-spacing: 0;
+        color: var(--ink);
+      }
+
+      h1 {
+        font-size: clamp(2.35rem, 8vw, 7rem);
+        max-width: 11ch;
+      }
+
+      h1 span {
+        display: block;
+      }
+
+      .title-sub {
+        margin-top: -0.08em;
+      }
+
+      h2 {
+        font-size: clamp(1.8rem, 5.2vw, 4.35rem);
+        max-width: 16ch;
+      }
+
+      h3 {
+        font-size: clamp(1rem, 2.1vw, 1.65rem);
+      }
+
+      p {
+        color: var(--body);
+        font-size: var(--body-size);
+        line-height: 1.35;
+      }
+
+      a {
+        color: inherit;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 3px;
+      }
+
+      .deck-label {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 0.5rem;
+        padding: clamp(0.32rem, 0.8vw, 0.55rem) clamp(0.75rem, 1.5vw, 1.1rem);
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--mint);
+        box-shadow: var(--shadow-small);
+        font-weight: 800;
+        font-size: var(--badge-size);
+        line-height: 1;
+      }
+
+      .slide-number {
+        position: absolute;
+        left: clamp(1.8rem, 5vw, 5rem);
+        bottom: clamp(1.5rem, 4vw, 4rem);
+        font-family: var(--font-display);
+        font-size: clamp(1rem, 2vw, 1.6rem);
+        color: var(--muted);
+        z-index: 1;
+      }
+
+      .source-note {
+        position: absolute;
+        right: clamp(2rem, 6vw, 5.5rem);
+        bottom: clamp(1.55rem, 4vw, 4rem);
+        max-width: min(52vw, 680px);
+        font-size: clamp(0.56rem, 0.82vw, 0.78rem);
+        color: var(--muted);
+        text-align: right;
+        z-index: 1;
+      }
+
+      .title-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(240px, 0.8fr);
+        align-items: center;
+        gap: clamp(1rem, 4vw, 4rem);
+      }
+
+      .hero-stack {
+        position: relative;
+        min-height: clamp(220px, 42vh, 460px);
+      }
+
+      .clay-card {
+        border: clamp(2px, 0.25vw, 4px) solid var(--ink);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+        background: var(--white);
+      }
+
+      .hero-chip {
+        position: absolute;
+        padding: clamp(0.75rem, 2vw, 1.5rem);
+        min-width: clamp(130px, 18vw, 230px);
+        transform: rotate(var(--angle));
+      }
+
+      .hero-chip strong {
+        display: block;
+        font-family: var(--font-display);
+        font-size: clamp(1.15rem, 3vw, 2.2rem);
+        line-height: 1;
+      }
+
+      .hero-chip span {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: var(--small-size);
+        font-weight: 800;
+      }
+
+      .chip-a {
+        --angle: -5deg;
+        top: 2%;
+        left: 7%;
+        background: var(--pink);
+        color: var(--white);
+      }
+
+      .chip-b {
+        --angle: 4deg;
+        top: 25%;
+        right: 4%;
+        background: var(--lavender);
+      }
+
+      .chip-c {
+        --angle: -2deg;
+        bottom: 5%;
+        left: 20%;
+        background: var(--ochre);
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+        align-items: center;
+        gap: clamp(0.75rem, 3vw, 3rem);
+      }
+
+      .panel {
+        padding: clamp(0.85rem, 2.2vw, 2rem);
+        border: clamp(2px, 0.25vw, 4px) solid var(--ink);
+        border-radius: var(--radius-xl);
+        background: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .panel.dark {
+        background: var(--dark);
+        color: var(--white);
+      }
+
+      .panel.dark p,
+      .panel.dark h3,
+      .panel.dark .metric {
+        color: var(--white);
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.55rem, 1.3vw, 1.1rem);
+      }
+
+      .stat {
+        min-height: clamp(92px, 13vh, 145px);
+        padding: clamp(0.75rem, 1.7vw, 1.35rem);
+        border: clamp(2px, 0.2vw, 3px) solid var(--ink);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-small);
+        background: var(--surface-card);
+      }
+
+      .stat strong,
+      .metric {
+        display: block;
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 4vw, 3.35rem);
+        line-height: 0.95;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 0.35rem;
+        font-size: var(--small-size);
+        color: var(--body);
+        font-weight: 800;
+        line-height: 1.2;
+      }
+
+      .card-row,
+      .card-grid {
+        display: grid;
+        gap: clamp(0.6rem, 1.5vw, 1.2rem);
+      }
+
+      .card-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .mini-card,
+      .rank-card {
+        padding: clamp(0.78rem, 1.7vw, 1.35rem);
+        border: clamp(2px, 0.2vw, 3px) solid var(--ink);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-small);
+        background: var(--white);
+      }
+
+      .mini-card h3,
+      .rank-card h3 {
+        margin-bottom: clamp(0.25rem, 0.7vw, 0.55rem);
+      }
+
+      .mini-card p,
+      .rank-card p {
+        font-size: clamp(0.72rem, 1.15vw, 0.95rem);
+      }
+
+      .pink {
+        background: var(--pink);
+        color: var(--white);
+      }
+
+      .peach {
+        background: var(--peach);
+      }
+
+      .lavender {
+        background: var(--lavender);
+      }
+
+      .mint {
+        background: var(--mint);
+      }
+
+      .ochre {
+        background: var(--ochre);
+      }
+
+      .teal {
+        background: var(--teal);
+        color: var(--white);
+      }
+
+      .pink p,
+      .teal p,
+      .pink h3,
+      .teal h3 {
+        color: var(--white);
+      }
+
+      .slide[data-title="Ecosystem"] .pink,
+      .slide[data-title="Ecosystem"] .pink p,
+      .slide[data-title="Ecosystem"] .pink h3,
+      .slide[data-title="Ecosystem"] .pink .metric {
+        color: var(--ink);
+      }
+
+      .rank-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.45rem, 1vw, 0.85rem);
+      }
+
+      .rank-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: clamp(0.5rem, 1vw, 0.8rem);
+        min-height: clamp(56px, 8vh, 78px);
+      }
+
+      .rank-no {
+        display: inline-grid;
+        place-items: center;
+        width: clamp(26px, 3vw, 38px);
+        height: clamp(26px, 3vw, 38px);
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        background: var(--white);
+        font-family: var(--font-display);
+        font-weight: 800;
+      }
+
+      .repo-name {
+        font-weight: 900;
+        font-size: clamp(0.72rem, 1.15vw, 0.98rem);
+        overflow-wrap: anywhere;
+      }
+
+      .stars {
+        font-family: var(--font-display);
+        font-size: clamp(0.92rem, 1.8vw, 1.45rem);
+        white-space: nowrap;
+      }
+
+      .pill-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: clamp(0.4rem, 0.9vw, 0.75rem);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: clamp(30px, 4vh, 42px);
+        padding: 0 clamp(0.65rem, 1.4vw, 1.05rem);
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--white);
+        box-shadow: 2px 3px 0 rgba(17, 17, 17, 0.16);
+        font-size: clamp(0.66rem, 1.05vw, 0.9rem);
+        font-weight: 900;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(0.6rem, 1.2vw, 1rem);
+      }
+
+      .step-card {
+        position: relative;
+        min-height: clamp(150px, 23vh, 230px);
+        padding: clamp(0.8rem, 1.7vw, 1.35rem);
+        border: clamp(2px, 0.2vw, 3px) solid var(--ink);
+        border-radius: var(--radius-lg);
+        background: var(--surface-card);
+        box-shadow: var(--shadow-small);
+      }
+
+      .step-card .metric {
+        margin-bottom: 0.3rem;
+      }
+
+      .two-columns {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.8rem, 2vw, 1.6rem);
+      }
+
+      .source-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.5rem, 1.2vw, 0.85rem);
+      }
+
+      .source-item {
+        padding: clamp(0.65rem, 1.4vw, 1rem);
+        border: 2px solid var(--ink);
+        border-radius: var(--radius-lg);
+        background: var(--white);
+        box-shadow: 2px 3px 0 rgba(17, 17, 17, 0.12);
+      }
+
+      .source-item strong {
+        display: block;
+        font-size: clamp(0.68rem, 1.05vw, 0.88rem);
+      }
+
+      .source-item span {
+        display: block;
+        margin-top: 0.15rem;
+        color: var(--muted);
+        font-size: clamp(0.58rem, 0.9vw, 0.72rem);
+        overflow-wrap: anywhere;
+      }
+
+      .callout {
+        padding: clamp(0.85rem, 2vw, 1.6rem);
+        border: clamp(2px, 0.25vw, 4px) solid var(--ink);
+        border-radius: var(--radius-xl);
+        background: var(--pink);
+        color: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .callout h3,
+      .callout p {
+        color: var(--white);
+      }
+
+      .risk-layout {
+        justify-content: flex-start;
+        gap: clamp(0.85rem, 2.2vh, 1.6rem);
+        padding-top: clamp(3rem, 9vh, 5rem);
+      }
+
+      .risk-layout > div:first-child {
+        max-width: min(100%, 980px);
+      }
+
+      .risk-layout h2 {
+        max-width: 22ch;
+      }
+
+      .risk-layout .callout {
+        width: min(100%, 1120px);
+        display: grid;
+        grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr);
+        align-items: center;
+        gap: clamp(0.7rem, 1.7vw, 1.4rem);
+        color: var(--ink);
+      }
+
+      .risk-layout .callout h3,
+      .risk-layout .callout p {
+        color: var(--ink);
+      }
+
+      .risk-layout .callout p {
+        grid-column: 1 / -1;
+        max-width: 78ch;
+      }
+
+      .risk-layout .pill-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .risk-layout .pill {
+        justify-content: center;
+        min-height: clamp(40px, 7vh, 62px);
+        border-radius: var(--radius-lg);
+        text-align: center;
+      }
+
+      .small-copy {
+        font-size: clamp(0.68rem, 1.05vw, 0.9rem);
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(22px) scale(0.985);
+        transition:
+          opacity var(--duration-normal) var(--ease-out-expo),
+          transform var(--duration-normal) var(--ease-out-expo);
+      }
+
+      .slide.visible .reveal {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      .reveal:nth-child(1) {
+        transition-delay: 0.08s;
+      }
+
+      .reveal:nth-child(2) {
+        transition-delay: 0.16s;
+      }
+
+      .reveal:nth-child(3) {
+        transition-delay: 0.24s;
+      }
+
+      .reveal:nth-child(4) {
+        transition-delay: 0.32s;
+      }
+
+      .floaty {
+        animation: floaty 5s ease-in-out infinite;
+      }
+
+      @keyframes floaty {
+        0%,
+        100% {
+          transform: translateY(0) rotate(var(--angle));
+        }
+        50% {
+          transform: translateY(-10px) rotate(var(--angle));
+        }
+      }
+
+      @media (max-width: 820px) {
+        .title-layout,
+        .split,
+        .two-columns {
+          grid-template-columns: 1fr;
+        }
+
+        .card-row,
+        .timeline {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .hero-stack {
+          min-height: clamp(150px, 28vh, 260px);
+        }
+
+        .source-note {
+          display: none;
+        }
+
+        .risk-layout .callout {
+          grid-template-columns: 1fr;
+        }
+
+        .risk-layout .pill-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 560px) {
+        .nav-dots {
+          top: auto;
+          right: auto;
+          bottom: clamp(0.8rem, 3vw, 1.15rem);
+          left: 50%;
+          flex-direction: row;
+          transform: translateX(-50%);
+        }
+
+        .slide::after {
+          display: none;
+        }
+
+        h1 {
+          max-width: none;
+          font-size: clamp(2rem, 9.6vw, 3.2rem);
+        }
+
+        .title-layout {
+          align-content: center;
+          gap: clamp(1rem, 4vh, 2rem);
+        }
+
+        .card-row,
+        .card-grid,
+        .rank-list,
+        .source-grid,
+        .timeline {
+          grid-template-columns: 1fr;
+        }
+
+        .rank-card:nth-child(n + 5),
+        .source-item:nth-child(n + 5) {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav-dots" id="navDots" aria-label="Slide navigation"></nav>
+
+    <section class="slide visible" data-title="Title">
+      <div class="slide-content title-layout">
+        <div>
+          <div class="deck-label reveal">2026 관심도 리서치</div>
+          <h1 class="reveal"><span>Agent Skills</span><span class="title-sub">지도</span></h1>
+          <p class="reveal" style="max-width: 42rem; margin-top: var(--content-gap)">
+            Claude와 Codex 생태계에서 최근 관심을 많이 받는 스킬 컬렉션과
+            반복 워크플로우를 발표용으로 정리했습니다.
+          </p>
+        </div>
+        <div class="hero-stack reveal" aria-hidden="true">
+          <div class="clay-card hero-chip chip-a floaty">
+            <strong>138k</strong><span>Anthropic official</span>
+          </div>
+          <div class="clay-card hero-chip chip-b floaty">
+            <strong>19.7k</strong><span>OpenAI Codex catalog</span>
+          </div>
+          <div class="clay-card hero-chip chip-c floaty">
+            <strong>5k+</strong><span>GitHub topic repos</span>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">01</div>
+      <div class="source-note">GitHub API and public pages checked on 2026-05-21.</div>
+    </section>
+
+    <section class="slide" data-title="Definition">
+      <div class="slide-content split">
+        <div>
+          <div class="deck-label reveal">한 줄 정의</div>
+          <h2 class="reveal">스킬은 프롬프트가 아니라, 재사용 가능한 작업 계약입니다.</h2>
+        </div>
+        <div class="panel reveal">
+          <div class="stat-grid">
+            <div class="stat mint"><strong>1</strong><span>SKILL.md가 발견 정보를 제공</span></div>
+            <div class="stat peach"><strong>2</strong><span>필요할 때 본문만 로드</span></div>
+            <div class="stat lavender"><strong>3</strong><span>스크립트·레퍼런스·자산을 동봉</span></div>
+            <div class="stat ochre"><strong>4</strong><span>팀 표준을 반복 가능한 절차로 고정</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">02</div>
+      <div class="source-note">agentskills.io overview; Claude Agent Skills docs.</div>
+    </section>
+
+    <section class="slide" data-title="Method">
+      <div class="slide-content">
+        <div class="deck-label reveal">리서치 방법</div>
+        <h2 class="reveal">공식성, 관심도, 실제 사용성을 분리해서 봤습니다.</h2>
+        <div class="card-row" style="margin-top: var(--content-gap)">
+          <div class="mini-card mint reveal">
+            <h3>공식 기반</h3>
+            <p>Anthropic, OpenAI, Agent Skills 표준 문서와 공식 GitHub를 우선 확인.</p>
+          </div>
+          <div class="mini-card peach reveal">
+            <h3>관심도 신호</h3>
+            <p>GitHub API stars/forks, topic 페이지, 커뮤니티 디렉터리의 최신 노출을 비교.</p>
+          </div>
+          <div class="mini-card lavender reveal">
+            <h3>실제 구조</h3>
+            <p>대표 repo를 shallow clone해서 README, SKILL.md 개수, 카테고리를 확인.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">03</div>
+      <div class="source-note">Local clones under ~/search/github; GitHub API observed 2026-05-21.</div>
+    </section>
+
+    <section class="slide" data-title="Ecosystem">
+      <div class="slide-content">
+        <div class="deck-label reveal">생태계 큰 그림</div>
+        <h2 class="reveal">Claude가 포맷을 키우고, Codex가 실무 카탈로그로 받아쳤습니다.</h2>
+        <div class="timeline" style="margin-top: var(--content-gap)">
+          <div class="step-card pink reveal">
+            <div class="metric">A</div>
+            <h3>Anthropic</h3>
+            <p>문서·디자인·개발 예시와 Agent Skills 구현을 공개.</p>
+          </div>
+          <div class="step-card mint reveal">
+            <div class="metric">B</div>
+            <h3>Open Standard</h3>
+            <p>SKILL.md, progressive disclosure, scripts/assets 구조가 표준화.</p>
+          </div>
+          <div class="step-card ochre reveal">
+            <div class="metric">C</div>
+            <h3>OpenAI Codex</h3>
+            <p>공식 skills catalog와 skill-installer 흐름을 제공.</p>
+          </div>
+          <div class="step-card lavender reveal">
+            <div class="metric">D</div>
+            <h3>Community</h3>
+            <p>보안, 프론트엔드, 브라우저 QA, 개발 방법론 팩이 빠르게 확산.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">04</div>
+      <div class="source-note">Anthropic skills repo; OpenAI skills repo; agentskills.io.</div>
+    </section>
+
+    <section class="slide" data-title="Popularity">
+      <div class="slide-content">
+        <div class="deck-label reveal">관심도 보드</div>
+        <h2 class="reveal">스타 수는 품질 보증이 아니라, 관심의 온도계입니다.</h2>
+        <div class="rank-list" style="margin-top: var(--content-gap)">
+          <div class="rank-card mint reveal"><span class="rank-no">1</span><span class="repo-name">obra/superpowers</span><span class="stars">200.9k</span></div>
+          <div class="rank-card peach reveal"><span class="rank-no">2</span><span class="repo-name">anthropics/skills</span><span class="stars">138.6k</span></div>
+          <div class="rank-card lavender reveal"><span class="rank-no">3</span><span class="repo-name">mattpocock/skills</span><span class="stars">98.0k</span></div>
+          <div class="rank-card ochre reveal"><span class="rank-no">4</span><span class="repo-name">ComposioHQ/awesome-claude-skills</span><span class="stars">61.0k</span></div>
+          <div class="rank-card mint reveal"><span class="rank-no">5</span><span class="repo-name">nexu-io/open-design</span><span class="stars">48.5k</span></div>
+          <div class="rank-card peach reveal"><span class="rank-no">6</span><span class="repo-name">addyosmani/agent-skills</span><span class="stars">44.4k</span></div>
+          <div class="rank-card lavender reveal"><span class="rank-no">7</span><span class="repo-name">sickn33/antigravity-awesome-skills</span><span class="stars">38.2k</span></div>
+          <div class="rank-card ochre reveal"><span class="rank-no">8</span><span class="repo-name">openai/skills</span><span class="stars">19.7k</span></div>
+        </div>
+      </div>
+      <div class="slide-number">05</div>
+      <div class="source-note">GitHub API star counts observed 2026-05-21; ranking limited to skill-relevant repos.</div>
+    </section>
+
+    <section class="slide" data-title="Claude">
+      <div class="slide-content">
+        <div class="deck-label reveal">Claude 쪽에서 뜨는 것</div>
+        <h2 class="reveal">문서 자동화에서 시작해, 개발 방법론과 브라우저 QA로 넓어졌습니다.</h2>
+        <div class="card-grid" style="margin-top: var(--content-gap)">
+          <div class="mini-card pink reveal">
+            <h3>Document Skills</h3>
+            <p>PDF, DOCX, PPTX, XLSX는 공식 pre-built 흐름의 핵심. 기업 업무 자동화와 직접 연결됩니다.</p>
+          </div>
+          <div class="mini-card mint reveal">
+            <h3>Frontend & Artifacts</h3>
+            <p>frontend-design, web artifacts, design system류가 시각 결과물 품질을 끌어올립니다.</p>
+          </div>
+          <div class="mini-card lavender reveal">
+            <h3>Engineering Method</h3>
+            <p>Superpowers, Addy, Matt Pocock 계열은 TDD, code review, spec-first를 강하게 밀고 갑니다.</p>
+          </div>
+          <div class="mini-card peach reveal">
+            <h3>Browser Automation</h3>
+            <p>Playwright skill은 실시간 브라우저 테스트, 스크린샷, 폼 검증 수요와 맞물립니다.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">06</div>
+      <div class="source-note">Anthropic README; cloned repos: obra/superpowers, addyosmani/agent-skills, mattpocock/skills, lackeyjb/playwright-skill.</div>
+    </section>
+
+    <section class="slide" data-title="Codex">
+      <div class="slide-content split">
+        <div>
+          <div class="deck-label reveal">Codex 쪽에서 보이는 것</div>
+          <h2 class="reveal">공식 카탈로그는 “개발팀 반복 업무” 중심입니다.</h2>
+        </div>
+        <div class="panel reveal">
+          <div class="pill-list">
+            <span class="pill">GitHub comments</span>
+            <span class="pill">CI fix</span>
+            <span class="pill">Playwright</span>
+            <span class="pill">Security threat model</span>
+            <span class="pill">Vercel / Netlify / Render</span>
+            <span class="pill">Figma</span>
+            <span class="pill">Notion workflow</span>
+            <span class="pill">OpenAI docs</span>
+            <span class="pill">Image generation</span>
+            <span class="pill">Skill creator</span>
+          </div>
+          <p style="margin-top: var(--content-gap)">
+            Codex는 “코드 작성”보다 PR, 배포, 보안, 디자인 핸드오프까지 이어지는 실무 루프를 스킬로 고정하는 방향입니다.
+          </p>
+        </div>
+      </div>
+      <div class="slide-number">07</div>
+      <div class="source-note">openai/skills README and local skill list; OpenAI Codex product page.</div>
+    </section>
+
+    <section class="slide" data-title="Community">
+      <div class="slide-content">
+        <div class="deck-label reveal">커뮤니티 승자 유형</div>
+        <h2 class="reveal">인기 스킬은 대체로 “역할”보다 “실패 방지 루프”를 팝니다.</h2>
+        <div class="card-row" style="margin-top: var(--content-gap)">
+          <div class="mini-card ochre reveal">
+            <h3>품질 게이트</h3>
+            <p>TDD, 리뷰, 단순화, PR 정리처럼 에이전트가 빼먹기 쉬운 절차를 고정합니다.</p>
+          </div>
+          <div class="mini-card mint reveal">
+            <h3>도메인 팩</h3>
+            <p>보안, Cloudflare, React/Tailwind, AI SDK처럼 특정 도메인의 지뢰를 줄입니다.</p>
+          </div>
+          <div class="mini-card lavender reveal">
+            <h3>도구 연결</h3>
+            <p>Playwright, Figma, Notion, GitHub, 배포 플랫폼을 반복 가능한 워크플로우로 묶습니다.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">08</div>
+      <div class="source-note">Trail of Bits, SecondSky, Playwright Skill, Addy Agent Skills READMEs.</div>
+    </section>
+
+    <section class="slide" data-title="Top Picks">
+      <div class="slide-content">
+        <div class="deck-label reveal">발표용 추천 리스트</div>
+        <h2 class="reveal">처음 설치한다면 넓은 카탈로그보다 얇은 필수 세트가 좋습니다.</h2>
+        <div class="card-grid" style="margin-top: var(--content-gap)">
+          <div class="mini-card mint reveal">
+            <h3>1. Official foundation</h3>
+            <p>Anthropic skills, OpenAI skills, Agent Skills spec. 구조와 설치 관례를 먼저 파악.</p>
+          </div>
+          <div class="mini-card peach reveal">
+            <h3>2. Engineering hygiene</h3>
+            <p>Superpowers, Addy, Matt Pocock. 계획, TDD, 리뷰, handoff 루프를 팀 표준으로.</p>
+          </div>
+          <div class="mini-card lavender reveal">
+            <h3>3. Browser QA</h3>
+            <p>Playwright 계열. UI 결과물을 실제 브라우저에서 확인하는 습관을 만들기 좋음.</p>
+          </div>
+          <div class="mini-card ochre reveal">
+            <h3>4. Security</h3>
+            <p>Trail of Bits. 감사, 정적 분석, supply chain, threat model링에 강점.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">09</div>
+      <div class="source-note">Synthesis from official docs, GitHub API, and cloned README review.</div>
+    </section>
+
+    <section class="slide" data-title="Risks">
+      <div class="slide-content risk-layout">
+        <div>
+          <div class="deck-label reveal">주의할 점</div>
+          <h2 class="reveal">스타가 높아도 바로 설치하면 안 됩니다.</h2>
+        </div>
+        <div class="callout reveal">
+          <h3>검토 체크</h3>
+          <div class="pill-list" style="margin-top: var(--element-gap)">
+            <span class="pill">SKILL.md 읽기</span>
+            <span class="pill">scripts 권한 확인</span>
+            <span class="pill">최근 커밋 확인</span>
+            <span class="pill">설치 범위 분리</span>
+            <span class="pill">팀 규칙과 충돌 점검</span>
+            <span class="pill">작게 활성화</span>
+          </div>
+          <p style="margin-top: var(--content-gap)">
+            특히 실행 스크립트가 있는 skill은 코드 의존성과 외부 접근 권한을 먼저 봐야 합니다.
+          </p>
+        </div>
+      </div>
+      <div class="slide-number">10</div>
+      <div class="source-note">Anthropic repo disclaimer; Agent Skills quality/security research surfaced in search.</div>
+    </section>
+
+    <section class="slide" data-title="Strategy">
+      <div class="slide-content">
+        <div class="deck-label reveal">팀 적용 전략</div>
+        <h2 class="reveal">많이 까는 것보다, 자주 반복되는 일을 정확히 포장하는 게 핵심입니다.</h2>
+        <div class="timeline" style="margin-top: var(--content-gap)">
+          <div class="step-card mint reveal">
+            <div class="metric">01</div>
+            <h3>반복 업무 찾기</h3>
+            <p>PR 작성, CI 수정, 디자인 QA, 보안 리뷰처럼 매주 반복되는 일을 고릅니다.</p>
+          </div>
+          <div class="step-card peach reveal">
+            <div class="metric">02</div>
+            <h3>작게 설치</h3>
+            <p>공식/검증된 skill 3-5개로 시작하고 팀 컨벤션과 충돌을 봅니다.</p>
+          </div>
+          <div class="step-card lavender reveal">
+            <div class="metric">03</div>
+            <h3>실패 로그화</h3>
+            <p>에이전트가 같은 실수를 반복하면 그 지점을 custom skill로 승격합니다.</p>
+          </div>
+          <div class="step-card ochre reveal">
+            <div class="metric">04</div>
+            <h3>검증 루프</h3>
+            <p>빌드, 테스트, 브라우저 확인, 리뷰 결과를 skill의 완료 조건으로 고정합니다.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">11</div>
+      <div class="source-note">Synthesis: Agent Skills progressive disclosure + engineering skill pack patterns.</div>
+    </section>
+
+    <section class="slide" data-title="Sources">
+      <div class="slide-content">
+        <div class="deck-label reveal">주요 출처</div>
+        <h2 class="reveal">근거는 공식 문서와 GitHub 데이터를 우선했습니다.</h2>
+        <div class="source-grid" style="margin-top: var(--content-gap)">
+          <div class="source-item reveal"><strong>Agent Skills 표준</strong><span>https://agentskills.io/</span></div>
+          <div class="source-item reveal"><strong>Anthropic 공식 skills</strong><span>https://github.com/anthropics/skills</span></div>
+          <div class="source-item reveal"><strong>Claude Agent Skills docs</strong><span>https://docs.claude.com/en/docs/agents-and-tools/agent-skills</span></div>
+          <div class="source-item reveal"><strong>OpenAI Codex product</strong><span>https://openai.com/codex/</span></div>
+          <div class="source-item reveal"><strong>OpenAI skills catalog</strong><span>https://github.com/openai/skills</span></div>
+          <div class="source-item reveal"><strong>GitHub agent-skills topic</strong><span>https://github.com/topics/agent-skills</span></div>
+          <div class="source-item reveal"><strong>Community packs cloned locally</strong><span>superpowers, addyosmani, mattpocock, trailofbits, playwright, secondsky, jMerta</span></div>
+          <div class="source-item reveal"><strong>Checked date</strong><span>2026-05-21 KST / GitHub API timestamps in UTC</span></div>
+        </div>
+      </div>
+      <div class="slide-number">12</div>
+    </section>
+
+    <script>
+      /* ===========================================
+         SLIDE PRESENTATION CONTROLLER
+         =========================================== */
+      class SlidePresentation {
+        constructor() {
+          this.slides = Array.from(document.querySelectorAll(".slide"));
+          this.currentSlide = 0;
+          this.progressBar = document.getElementById("progressBar");
+          this.navDotsContainer = document.getElementById("navDots");
+          this.setupIntersectionObserver();
+          this.setupKeyboardNav();
+          this.setupTouchNav();
+          this.setupWheelNav();
+          this.setupProgressBar();
+          this.setupNavDots();
+          this.goToSlide(0, false);
+        }
+
+        setupIntersectionObserver() {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("visible");
+                  this.currentSlide = this.slides.indexOf(entry.target);
+                  this.updateProgress();
+                  this.updateNavDots();
+                }
+              });
+            },
+            { threshold: 0.55 }
+          );
+          this.slides.forEach((slide) => observer.observe(slide));
+        }
+
+        setupKeyboardNav() {
+          document.addEventListener("keydown", (event) => {
+            const nextKeys = ["ArrowDown", "ArrowRight", " ", "PageDown"];
+            const prevKeys = ["ArrowUp", "ArrowLeft", "PageUp"];
+            if (nextKeys.includes(event.key)) {
+              event.preventDefault();
+              this.goToSlide(this.currentSlide + 1);
+            }
+            if (prevKeys.includes(event.key)) {
+              event.preventDefault();
+              this.goToSlide(this.currentSlide - 1);
+            }
+            if (event.key === "Home") {
+              event.preventDefault();
+              this.goToSlide(0);
+            }
+            if (event.key === "End") {
+              event.preventDefault();
+              this.goToSlide(this.slides.length - 1);
+            }
+          });
+        }
+
+        setupTouchNav() {
+          let startY = 0;
+          window.addEventListener(
+            "touchstart",
+            (event) => {
+              startY = event.touches[0].clientY;
+            },
+            { passive: true }
+          );
+          window.addEventListener(
+            "touchend",
+            (event) => {
+              const deltaY = startY - event.changedTouches[0].clientY;
+              if (Math.abs(deltaY) > 50) {
+                this.goToSlide(this.currentSlide + (deltaY > 0 ? 1 : -1));
+              }
+            },
+            { passive: true }
+          );
+        }
+
+        setupWheelNav() {
+          let locked = false;
+          window.addEventListener(
+            "wheel",
+            (event) => {
+              if (Math.abs(event.deltaY) < 22 || locked) return;
+              locked = true;
+              this.goToSlide(this.currentSlide + (event.deltaY > 0 ? 1 : -1));
+              window.setTimeout(() => {
+                locked = false;
+              }, 520);
+            },
+            { passive: true }
+          );
+        }
+
+        setupProgressBar() {
+          window.addEventListener("scroll", () => this.updateProgress(), { passive: true });
+        }
+
+        setupNavDots() {
+          this.navDotsContainer.innerHTML = "";
+          this.slides.forEach((slide, index) => {
+            const button = document.createElement("button");
+            button.className = "nav-dot";
+            button.type = "button";
+            button.setAttribute("aria-label", `${index + 1}번 슬라이드: ${slide.dataset.title}`);
+            button.addEventListener("click", () => this.goToSlide(index));
+            this.navDotsContainer.appendChild(button);
+          });
+          this.updateNavDots();
+        }
+
+        goToSlide(index, smooth = true) {
+          const safeIndex = Math.max(0, Math.min(index, this.slides.length - 1));
+          this.currentSlide = safeIndex;
+          this.slides[safeIndex].scrollIntoView({
+            behavior: smooth ? "smooth" : "auto",
+            block: "start",
+          });
+          this.updateProgress();
+          this.updateNavDots();
+        }
+
+        updateProgress() {
+          const progress = ((this.currentSlide + 1) / this.slides.length) * 100;
+          this.progressBar.style.width = `${progress}%`;
+        }
+
+        updateNavDots() {
+          const dots = this.navDotsContainer.querySelectorAll(".nav-dot");
+          dots.forEach((dot, index) => {
+            dot.classList.toggle("active", index === this.currentSlide);
+          });
+        }
+      }
+
+      new SlidePresentation();
+    </script>
+  </body>
+</html>

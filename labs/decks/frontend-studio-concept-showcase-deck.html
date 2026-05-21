@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontend Studio Concept Showcase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Bricolage+Grotesque:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* === THEME TOKENS === */
+      :root {
+        --ink: #141413;
+        --paper: #faf9f5;
+        --paper-soft: #efe9de;
+        --line: #d8cab7;
+        --muted: #68655e;
+        --coral: #cc785c;
+        --font-body: "Manrope", "Noto Sans KR", sans-serif;
+        --font-display: "Bricolage Grotesque", "Manrope", sans-serif;
+        --font-mono: "JetBrains Mono", "IBM Plex Mono", monospace;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ===========================================
+         VIEWPORT FITTING: MANDATORY BASE STYLES
+         Include this ENTIRE file in every presentation.
+         These styles ensure slides fit exactly in the viewport.
+         =========================================== */
+
+      /* 1. Lock html/body to viewport */
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+      }
+
+      html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* 2. Each slide = exact viewport height */
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile browsers */
+        overflow: hidden; /* CRITICAL: Prevent ANY overflow */
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* 3. Content container with flex for centering */
+      .slide-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 100%;
+        overflow: hidden; /* Double-protection against overflow */
+        padding: var(--slide-padding);
+      }
+
+      /* 4. ALL typography uses clamp() for responsive scaling */
+      :root {
+        /* Titles scale from mobile to desktop */
+        --title-size: clamp(1.5rem, 5vw, 4rem);
+        --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+        --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+
+        /* Body text */
+        --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+        --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+        /* Spacing scales with viewport */
+        --slide-padding: clamp(1rem, 4vw, 4rem);
+        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --element-gap: clamp(0.25rem, 1vw, 1rem);
+      }
+
+      /* 5. Cards/containers use viewport-relative max sizes */
+      .card,
+      .container,
+      .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+      }
+
+      /* 6. Lists auto-scale with viewport */
+      .feature-list,
+      .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+      }
+
+      .feature-list li,
+      .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+      }
+
+      /* 7. Grids adapt to available space */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+      }
+
+      /* 8. Images constrained to viewport */
+      img,
+      .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+      }
+
+      /* ===========================================
+         RESPONSIVE BREAKPOINTS
+         Aggressive scaling for smaller viewports
+         =========================================== */
+
+      /* Short viewports (< 700px height) */
+      @media (max-height: 700px) {
+        :root {
+          --slide-padding: clamp(0.75rem, 3vw, 2rem);
+          --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+          --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+          --h2-size: clamp(1rem, 3vw, 1.75rem);
+        }
+      }
+
+      /* Very short viewports (< 600px height) */
+      @media (max-height: 600px) {
+        :root {
+          --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+          --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+          --title-size: clamp(1.1rem, 4vw, 2rem);
+          --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+
+        /* Hide non-essential elements */
+        .nav-dots,
+        .keyboard-hint,
+        .decorative {
+          display: none;
+        }
+      }
+
+      /* Extremely short (landscape phones, < 500px height) */
+      @media (max-height: 500px) {
+        :root {
+          --slide-padding: clamp(0.4rem, 2vw, 1rem);
+          --title-size: clamp(1rem, 3.5vw, 1.5rem);
+          --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+          --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+      }
+
+      /* Narrow viewports (< 600px width) */
+      @media (max-width: 600px) {
+        :root {
+          --title-size: clamp(1.25rem, 7vw, 2.5rem);
+        }
+
+        /* Stack grids vertically */
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===========================================
+         REDUCED MOTION
+         Respect user preferences
+         =========================================== */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.2s !important;
+        }
+
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      /* === DECK SIZING OVERRIDES === */
+      :root {
+        --title-size: clamp(2.25rem, 4.35rem, 5rem);
+        --h2-size: clamp(1.7rem, 3rem, 3.5rem);
+        --h3-size: clamp(1rem, 1.25rem, 1.45rem);
+        --body-size: clamp(0.86rem, 1rem, 1.08rem);
+        --small-size: clamp(0.66rem, 0.78rem, 0.88rem);
+        --slide-padding: clamp(1.1rem, 3.2rem, 4rem);
+        --content-gap: clamp(0.75rem, 1.18rem, 1.55rem);
+      }
+
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-body);
+        letter-spacing: 0;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      li,
+      a,
+      button,
+      span {
+        letter-spacing: 0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        font-weight: 800;
+        line-height: 0.96;
+      }
+
+      h1 {
+        max-width: 12ch;
+        font-size: var(--title-size);
+      }
+
+      h2 {
+        max-width: 13ch;
+        font-size: var(--h2-size);
+      }
+
+      h3 {
+        font-size: var(--h3-size);
+        line-height: 1.15;
+      }
+
+      p,
+      li {
+        color: inherit;
+        font-size: var(--body-size);
+        line-height: 1.46;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .deck-progress {
+        position: fixed;
+        inset: 0 auto auto 0;
+        z-index: 40;
+        width: 100%;
+        height: 4px;
+        background: rgba(20, 20, 19, 0.12);
+      }
+
+      .deck-progress span {
+        display: block;
+        width: var(--progress, 10%);
+        height: 100%;
+        background: currentColor;
+        color: var(--accent, var(--coral));
+        transition: width 300ms var(--ease), color 300ms var(--ease);
+      }
+
+      .nav-dots {
+        position: fixed;
+        right: 1rem;
+        top: 50%;
+        z-index: 40;
+        display: grid;
+        gap: 0.42rem;
+        transform: translateY(-50%);
+      }
+
+      .nav-dots button {
+        width: 0.58rem;
+        height: 0.58rem;
+        border: 1px solid currentColor;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.72);
+        color: rgba(20, 20, 19, 0.38);
+        cursor: pointer;
+      }
+
+      .nav-dots button[aria-current="true"] {
+        background: var(--accent, var(--coral));
+        color: var(--accent, var(--coral));
+        transform: scale(1.28);
+      }
+
+      .slide {
+        background: var(--bg, var(--paper));
+        color: var(--fg, var(--ink));
+      }
+
+      .slide-content {
+        position: relative;
+        z-index: 2;
+        width: min(100%, 1180px);
+        margin: 0 auto;
+        gap: var(--content-gap);
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 1.2rem;
+        pointer-events: none;
+        border: 1px solid var(--line-local, rgba(20, 20, 19, 0.16));
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        width: max-content;
+        max-width: 100%;
+        gap: 0.6rem;
+        color: var(--accent, var(--coral));
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .kicker::before {
+        content: "";
+        width: 2rem;
+        height: 1px;
+        background: currentColor;
+      }
+
+      .lead {
+        max-width: 58ch;
+        font-size: clamp(1rem, 1.18rem, 1.35rem);
+        font-weight: 650;
+        line-height: 1.42;
+      }
+
+      .small {
+        color: var(--muted-local, var(--muted));
+        font-size: var(--small-size);
+        line-height: 1.44;
+      }
+
+      .layout-title,
+      .layout-split {
+        display: grid;
+        align-items: center;
+        gap: clamp(0.9rem, 1.6rem, 2rem);
+      }
+
+      .layout-title {
+        grid-template-columns: minmax(0, 0.94fr) minmax(320px, 1.06fr);
+      }
+
+      .layout-split {
+        grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-6 {
+        display: grid;
+        gap: clamp(0.58rem, 0.8rem, 1rem);
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-6 {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      .card,
+      .concept-card,
+      .sample-panel,
+      .choice-row {
+        border: 1px solid var(--line-local, rgba(20, 20, 19, 0.16));
+        border-radius: var(--radius-local, 8px);
+        background: var(--card-bg, rgba(255, 255, 255, 0.58));
+      }
+
+      .concept-card {
+        min-height: clamp(8.5rem, 10rem, 11.4rem);
+        padding: clamp(0.72rem, 0.92rem, 1.08rem);
+      }
+
+      .concept-card strong,
+      .sample-panel strong,
+      .choice-row strong {
+        display: block;
+        color: inherit;
+        font-size: clamp(0.84rem, 0.98rem, 1.05rem);
+        line-height: 1.18;
+      }
+
+      .concept-card p,
+      .sample-panel p,
+      .choice-row p {
+        margin-top: 0.4rem;
+        color: var(--muted-local, currentColor);
+        font-size: clamp(0.68rem, 0.8rem, 0.9rem);
+        line-height: 1.38;
+      }
+
+      .sample-panel {
+        padding: clamp(0.78rem, 1rem, 1.2rem);
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.42rem;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.72rem;
+        border: 1px solid var(--line-local, rgba(20, 20, 19, 0.18));
+        border-radius: 999px;
+        background: var(--tag-bg, transparent);
+        color: inherit;
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.78rem);
+        font-weight: 700;
+        line-height: 1;
+        padding: 0.42rem 0.64rem;
+      }
+
+      .visual-stage {
+        position: relative;
+        min-height: clamp(18rem, 24rem, 28rem);
+        overflow: hidden;
+        border: 1px solid var(--line-local, rgba(20, 20, 19, 0.16));
+        border-radius: var(--radius-local, 8px);
+        background: var(--stage-bg, rgba(255, 255, 255, 0.5));
+      }
+
+      .code-lines {
+        display: grid;
+        gap: 0.48rem;
+        font-family: var(--font-mono);
+        font-size: clamp(0.62rem, 0.72rem, 0.82rem);
+        line-height: 1.4;
+      }
+
+      .line {
+        min-height: 1.4rem;
+        padding: 0.28rem 0.45rem;
+        border-radius: var(--radius-local, 6px);
+        background: var(--line-bg, rgba(20, 20, 19, 0.06));
+      }
+
+      .slide-number {
+        position: absolute;
+        right: clamp(1.5rem, 2.2rem, 3rem);
+        bottom: clamp(1rem, 1.4rem, 1.8rem);
+        z-index: 4;
+        color: var(--muted-local, var(--muted));
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 520ms var(--ease), transform 520ms var(--ease);
+      }
+
+      .slide.is-active .reveal {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .slide.is-active .reveal:nth-child(2) {
+        transition-delay: 70ms;
+      }
+
+      .slide.is-active .reveal:nth-child(3) {
+        transition-delay: 130ms;
+      }
+
+      .slide.is-active .reveal:nth-child(4) {
+        transition-delay: 190ms;
+      }
+
+      /* === INTRO CONCEPT MAP === */
+      .theme-index {
+        --bg: #f5f1e8;
+        --fg: #141413;
+        --accent: #cc785c;
+        --card-bg: rgba(255, 255, 255, 0.62);
+        --muted-local: #68655e;
+      }
+
+      .axis-map {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.72rem;
+      }
+
+      .axis-card {
+        position: relative;
+        min-height: clamp(8.2rem, 10rem, 11.5rem);
+        overflow: hidden;
+        padding: 0.82rem;
+        border: 1px solid rgba(20, 20, 19, 0.16);
+        border-radius: 8px;
+        background: var(--chip-bg);
+        color: var(--chip-fg);
+      }
+
+      .axis-card span {
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.78rem);
+        font-weight: 700;
+      }
+
+      .axis-card strong {
+        display: block;
+        margin-top: 1.25rem;
+        max-width: 12ch;
+        font-family: var(--chip-font, var(--font-display));
+        font-size: clamp(1rem, 1.28rem, 1.48rem);
+        line-height: 1.04;
+      }
+
+      .axis-card p {
+        margin-top: 0.48rem;
+        color: inherit;
+        font-size: clamp(0.62rem, 0.74rem, 0.84rem);
+      }
+
+      /* === CLAUDE WARM EDITORIAL === */
+      .theme-claude {
+        --bg: #faf9f5;
+        --fg: #141413;
+        --accent: #cc785c;
+        --line-local: #d8cab7;
+        --card-bg: #efe9de;
+        --muted-local: #5f5b53;
+        --stage-bg: #181715;
+        --line-bg: rgba(250, 249, 245, 0.09);
+        --radius-local: 12px;
+        --font-display: "Cormorant Garamond", Georgia, serif;
+      }
+
+      .warm-notes {
+        position: absolute;
+        inset: 1.1rem;
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 0.9rem;
+      }
+
+      .warm-code,
+      .warm-flow {
+        padding: 1rem;
+        border: 1px solid rgba(250, 249, 245, 0.14);
+        border-radius: 8px;
+      }
+
+      .warm-code {
+        color: #faf9f5;
+        background: #181715;
+      }
+
+      .warm-flow {
+        display: grid;
+        gap: 0.58rem;
+        background: #f5f0e8;
+      }
+
+      .warm-node {
+        min-height: 2.55rem;
+        border-left: 5px solid #cc785c;
+        border-radius: 8px;
+        background: #faf9f5;
+        padding: 0.55rem 0.68rem;
+        color: #141413;
+        font-weight: 800;
+      }
+
+      /* === VERCEL DEPLOY PULSE === */
+      .theme-vercel {
+        --bg: #ffffff;
+        --fg: #171717;
+        --accent: #0070f3;
+        --line-local: #ebebeb;
+        --card-bg: #fafafa;
+        --muted-local: #5f6368;
+        --stage-bg: #ffffff;
+        --line-bg: #f2f2f2;
+        --font-display: "Plus Jakarta Sans", sans-serif;
+      }
+
+      .deploy-stage {
+        position: absolute;
+        inset: 1.1rem;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        gap: 1rem;
+      }
+
+      .mesh {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #ebebeb;
+        border-radius: 8px;
+        background:
+          radial-gradient(circle at 28% 42%, rgba(0, 223, 216, 0.86), transparent 24%),
+          radial-gradient(circle at 52% 32%, rgba(121, 40, 202, 0.82), transparent 22%),
+          radial-gradient(circle at 70% 56%, rgba(255, 0, 128, 0.74), transparent 22%),
+          radial-gradient(circle at 50% 84%, rgba(249, 203, 40, 0.72), transparent 24%),
+          #ffffff;
+      }
+
+      .mesh::after {
+        content: "DEPLOY READY";
+        position: absolute;
+        left: 1rem;
+        bottom: 1rem;
+        color: #171717;
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        font-weight: 700;
+      }
+
+      .deploy-log {
+        display: grid;
+        gap: 0.42rem;
+        font-family: var(--font-mono);
+        font-size: clamp(0.62rem, 0.72rem, 0.82rem);
+      }
+
+      .deploy-log span {
+        border: 1px solid #ebebeb;
+        border-radius: 8px;
+        padding: 0.44rem 0.56rem;
+      }
+
+      /* === STRIPE INDIGO RUNTIME === */
+      .theme-stripe {
+        --bg: #f6f9fc;
+        --fg: #0d253d;
+        --accent: #533afd;
+        --line-local: #dce4ed;
+        --card-bg: #ffffff;
+        --muted-local: #506175;
+        --stage-bg: linear-gradient(145deg, #0d253d, #533afd 54%, #ea2261);
+        --line-bg: rgba(255, 255, 255, 0.12);
+        --font-display: "Plus Jakarta Sans", sans-serif;
+      }
+
+      .runtime-panel {
+        position: absolute;
+        inset: 1.1rem;
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 0.9rem;
+        color: white;
+      }
+
+      .metric-stack {
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .metric {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.82rem;
+      }
+
+      .metric strong {
+        font-size: clamp(1.4rem, 2.2rem, 2.6rem);
+      }
+
+      .api-box {
+        display: grid;
+        align-content: center;
+        border-radius: 8px;
+        background: rgba(13, 37, 61, 0.62);
+        padding: 1rem;
+      }
+
+      /* === NVIDIA GREEN SIGNAL === */
+      .theme-nvidia {
+        --bg: #000000;
+        --fg: #ffffff;
+        --accent: #76b900;
+        --line-local: #303030;
+        --card-bg: #111111;
+        --muted-local: #c9c9c9;
+        --stage-bg: #0b0b0b;
+        --line-bg: #1a1a1a;
+        --radius-local: 2px;
+        --font-display: "Archivo", sans-serif;
+      }
+
+      .kernel-grid {
+        position: absolute;
+        inset: 1.1rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.62rem;
+      }
+
+      .kernel-cell {
+        display: grid;
+        align-content: end;
+        min-height: 100%;
+        border: 1px solid #303030;
+        border-radius: 2px;
+        background: #111111;
+        padding: 0.75rem;
+        color: #ffffff;
+      }
+
+      .kernel-cell.active {
+        background: #76b900;
+        color: #000000;
+      }
+
+      .kernel-cell span {
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.76rem);
+      }
+
+      /* === BUGATTI BLACKBOX === */
+      .theme-bugatti {
+        --bg: #000000;
+        --fg: #ffffff;
+        --accent: #d4a017;
+        --line-local: #262626;
+        --card-bg: #050505;
+        --muted-local: #cccccc;
+        --stage-bg: #000000;
+        --line-bg: #111111;
+        --radius-local: 0px;
+        --font-display: "Cormorant Garamond", Georgia, serif;
+      }
+
+      .blackbox {
+        position: absolute;
+        inset: 1.1rem;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 1rem;
+        color: white;
+      }
+
+      .trace-title {
+        border-bottom: 1px solid #262626;
+        padding-bottom: 0.6rem;
+        font-family: var(--font-mono);
+        font-size: clamp(0.62rem, 0.72rem, 0.82rem);
+      }
+
+      .trace-line {
+        align-self: center;
+        font-family: var(--font-display);
+        font-size: clamp(2.1rem, 3.1rem, 3.7rem);
+        line-height: 0.94;
+      }
+
+      .trace-meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        color: #cccccc;
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.78rem);
+      }
+
+      /* === MIRO CANARY BOARD === */
+      .theme-miro {
+        --bg: #ffffff;
+        --fg: #1c1c1e;
+        --accent: #ffd02f;
+        --line-local: #1c1c1e;
+        --card-bg: #ffffff;
+        --muted-local: #3b3b3d;
+        --stage-bg: #ffffff;
+        --line-bg: #f6f6f6;
+        --radius-local: 12px;
+        --font-display: "Bricolage Grotesque", sans-serif;
+      }
+
+      .board {
+        position: absolute;
+        inset: 1.1rem;
+        background-image:
+          linear-gradient(#ececec 1px, transparent 1px),
+          linear-gradient(90deg, #ececec 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+
+      .sticky {
+        position: absolute;
+        width: min(42%, 15rem);
+        min-height: 6.8rem;
+        border: 2px solid #1c1c1e;
+        border-radius: 10px;
+        padding: 0.76rem;
+        box-shadow: 5px 5px 0 #1c1c1e;
+        font-weight: 800;
+      }
+
+      .sticky.one {
+        left: 6%;
+        top: 9%;
+        background: #ffd02f;
+      }
+
+      .sticky.two {
+        right: 8%;
+        top: 28%;
+        background: #0fbcb0;
+      }
+
+      .sticky.three {
+        left: 27%;
+        bottom: 10%;
+        background: #ff9999;
+      }
+
+      .connector {
+        position: absolute;
+        left: 32%;
+        top: 47%;
+        width: 34%;
+        height: 2px;
+        background: #4262ff;
+        transform: rotate(11deg);
+      }
+
+      /* === CHOICE MATRIX === */
+      .choice-list {
+        display: grid;
+        gap: 0.46rem;
+      }
+
+      .choice-row {
+        display: grid;
+        grid-template-columns: 1fr 1.25fr 1.15fr;
+        align-items: center;
+        min-height: 4.4rem;
+        gap: 0.7rem;
+        padding: 0.62rem 0.72rem;
+      }
+
+      .choice-row span {
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.78rem);
+        font-weight: 800;
+      }
+
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.55rem;
+      }
+
+      .pipe-step {
+        min-height: 6.4rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.64);
+        padding: 0.74rem;
+      }
+
+      .pipe-step strong {
+        display: block;
+        color: var(--ink);
+        font-size: clamp(0.78rem, 0.92rem, 1rem);
+      }
+
+      .pipe-step p {
+        margin-top: 0.34rem;
+        color: var(--muted);
+        font-size: clamp(0.64rem, 0.74rem, 0.84rem);
+        line-height: 1.36;
+      }
+
+      @media (max-height: 760px) {
+        :root {
+          --title-size: clamp(1.9rem, 3.35rem, 3.8rem);
+          --h2-size: clamp(1.5rem, 2.45rem, 2.8rem);
+          --h3-size: clamp(0.92rem, 1.08rem, 1.22rem);
+          --body-size: clamp(0.74rem, 0.86rem, 0.96rem);
+          --small-size: clamp(0.58rem, 0.68rem, 0.76rem);
+          --slide-padding: clamp(0.78rem, 2rem, 2.5rem);
+          --content-gap: clamp(0.52rem, 0.84rem, 1.1rem);
+        }
+
+        .visual-stage {
+          min-height: 17rem;
+        }
+
+        .concept-card {
+          min-height: 7.4rem;
+        }
+
+        .choice-row {
+          min-height: 3.85rem;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .layout-title,
+        .layout-split,
+        .grid-2,
+        .grid-3,
+        .grid-6,
+        .axis-map,
+        .pipeline {
+          grid-template-columns: 1fr;
+        }
+
+        .visual-stage {
+          min-height: 15rem;
+        }
+
+        .warm-notes,
+        .runtime-panel,
+        .kernel-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .choice-row {
+          grid-template-columns: 1fr;
+        }
+
+        .choice-row:nth-child(n + 5) {
+          display: none;
+        }
+      }
+
+      @media (max-width: 560px) {
+        :root {
+          --title-size: clamp(1.75rem, 2.35rem, 2.8rem);
+          --h2-size: clamp(1.35rem, 1.95rem, 2.25rem);
+          --body-size: clamp(0.76rem, 0.85rem, 0.94rem);
+          --slide-padding: clamp(0.8rem, 1.05rem, 1.25rem);
+        }
+
+        .slide::before {
+          inset: 0.7rem;
+        }
+
+        .nav-dots {
+          display: none;
+        }
+
+        .slide-number {
+          right: 1rem;
+          bottom: 0.82rem;
+        }
+
+        .axis-card:nth-child(n + 5),
+        .concept-card:nth-child(n + 3),
+        .pipe-step:nth-child(n + 4) {
+          display: none;
+        }
+
+        .axis-card:nth-child(n + 4),
+        .theme-stripe .api-box {
+          display: none;
+        }
+
+        .axis-card {
+          min-height: 8rem;
+        }
+
+        .runtime-panel {
+          align-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck-progress" aria-hidden="true"><span></span></div>
+    <nav class="nav-dots" aria-label="슬라이드 이동"></nav>
+
+    <main>
+      <section class="slide theme-index" data-accent="#cc785c" data-title="Title">
+        <div class="slide-content layout-title">
+          <div>
+            <div class="kicker reveal">$frontend-studio x $get-design</div>
+            <h1 class="reveal">6개의 디자인 언어로 같은 개발자 메시지를 다르게 말하기</h1>
+            <p class="lead reveal">
+              웹페이지와 HTML PPT를 만들 때, 스타일은 장식이 아니라 청중에게 전달되는 작업 방식의 신호다.
+            </p>
+          </div>
+          <div class="axis-map reveal" aria-hidden="true">
+            <div class="axis-card" style="--chip-bg:#faf9f5;--chip-fg:#141413;--chip-font:'Cormorant Garamond'"><span>01</span><strong>Warm Dev Editorial</strong><p>친절한 기술 노트</p></div>
+            <div class="axis-card" style="--chip-bg:#ffffff;--chip-fg:#171717"><span>02</span><strong>Deploy Pulse</strong><p>정확한 출시 콘솔</p></div>
+            <div class="axis-card" style="--chip-bg:#0d253d;--chip-fg:#ffffff"><span>03</span><strong>Indigo Runtime</strong><p>신뢰감 있는 API 브리핑</p></div>
+            <div class="axis-card" style="--chip-bg:#000000;--chip-fg:#76b900"><span>04</span><strong>Green Signal</strong><p>각진 AI 인프라 키노트</p></div>
+            <div class="axis-card" style="--chip-bg:#000000;--chip-fg:#ffffff;--chip-font:'Cormorant Garamond'"><span>05</span><strong>Blackbox Console</strong><p>고급스러운 장애 분석</p></div>
+            <div class="axis-card" style="--chip-bg:#ffd02f;--chip-fg:#1c1c1e"><span>06</span><strong>Canary Dev Board</strong><p>밝은 협업 워룸</p></div>
+          </div>
+        </div>
+        <div class="slide-number">01 / 10</div>
+      </section>
+
+      <section class="slide theme-index" data-accent="#cc785c" data-title="Map">
+        <div class="slide-content">
+          <div class="kicker reveal">concept map</div>
+          <h2 class="reveal">대비가 강해야 선택지도 의미가 생긴다</h2>
+          <div class="grid-3 reveal">
+            <div class="concept-card">
+              <strong>따뜻함 ↔ 차가움</strong>
+              <p>Claude는 학습과 설득에 강하고, Vercel/Stripe는 실행 상태와 신뢰에 강하다.</p>
+            </div>
+            <div class="concept-card">
+              <strong>밝은 캔버스 ↔ 검은 콘솔</strong>
+              <p>Miro는 워크숍, NVIDIA/Bugatti는 기술 밀도와 집중감을 만든다.</p>
+            </div>
+            <div class="concept-card">
+              <strong>문서형 ↔ 런타임형</strong>
+              <p>설명 자료는 editorial, 제품 데모는 console, 의사결정 회의는 board가 맞다.</p>
+            </div>
+            <div class="concept-card">
+              <strong>친근한 교육 ↔ 임원 브리핑</strong>
+              <p>같은 내용을 누구에게 보여주느냐에 따라 화면 언어가 달라진다.</p>
+            </div>
+            <div class="concept-card">
+              <strong>상태 강조 ↔ 사고 과정 강조</strong>
+              <p>Deploy/Green은 상태, Warm/Board는 과정과 학습을 잘 보여준다.</p>
+            </div>
+            <div class="concept-card">
+              <strong>표준화 ↔ 기억성</strong>
+              <p>브랜드 참조는 복제가 아니라, 기억되는 정보 구조를 고르는 일이다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">02 / 10</div>
+      </section>
+
+      <section class="slide theme-claude" data-accent="#cc785c" data-title="Claude">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="kicker reveal">claude reference</div>
+            <h2 class="reveal">Warm Dev Editorial</h2>
+            <p class="lead reveal">기술 설명을 차갑게 보이지 않게 만드는 따뜻한 연구 노트형 개발자 deck.</p>
+            <div class="tag-row reveal">
+              <span class="tag">tutorial</span><span class="tag">agent guide</span><span class="tag">onboarding</span><span class="tag">docs</span>
+            </div>
+          </div>
+          <div class="visual-stage reveal">
+            <div class="warm-notes">
+              <div class="warm-code">
+                <div class="code-lines">
+                  <span class="line">$ codex inspect workflow</span>
+                  <span class="line">read context -> patch -> test</span>
+                  <span class="line">evidence: screenshot + build log</span>
+                </div>
+              </div>
+              <div class="warm-flow">
+                <div class="warm-node">01. 설명을 짧게</div>
+                <div class="warm-node">02. 코드 패널은 읽히게</div>
+                <div class="warm-node">03. 코럴은 현재 위치만</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">03 / 10</div>
+      </section>
+
+      <section class="slide theme-vercel" data-accent="#0070f3" data-title="Vercel">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="kicker reveal">vercel reference</div>
+            <h2 class="reveal">Deploy Pulse</h2>
+            <p class="lead reveal">넓은 흰 캔버스와 얇은 선, 상태 로그로 만든 차갑고 정확한 developer console.</p>
+            <div class="grid-2 reveal">
+              <div class="sample-panel"><strong>잘 맞는 작업</strong><p>배포 flow, devtool 소개, platform launch, CLI quickstart.</p></div>
+              <div class="sample-panel"><strong>주의</strong><p>흰 배경만 반복하면 문서처럼 밋밋해진다.</p></div>
+            </div>
+          </div>
+          <div class="visual-stage reveal">
+            <div class="deploy-stage">
+              <div class="mesh"></div>
+              <div class="deploy-log">
+                <span>build completed in 42s</span>
+                <span>edge route warmed</span>
+                <span>production deployment ready</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">04 / 10</div>
+      </section>
+
+      <section class="slide theme-stripe" data-accent="#533afd" data-title="Stripe">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="kicker reveal">stripe reference</div>
+            <h2 class="reveal">Indigo Runtime</h2>
+            <p class="lead reveal">금융 인프라처럼 신뢰감 있지만, 개발자 콘솔처럼 빠르고 정밀한 기술 브리핑.</p>
+            <div class="tag-row reveal">
+              <span class="tag">API</span><span class="tag">metrics</span><span class="tag">fintech</span><span class="tag">infra</span>
+            </div>
+          </div>
+          <div class="visual-stage reveal">
+            <div class="runtime-panel">
+              <div class="metric-stack">
+                <div class="metric"><strong>99.9%</strong><p>verified flow</p></div>
+                <div class="metric"><strong>32ms</strong><p>median agent call</p></div>
+              </div>
+              <div class="api-box">
+                <div class="code-lines">
+                  <span class="line">POST /agent/tasks</span>
+                  <span class="line">context: repo + AGENTS.md</span>
+                  <span class="line">result: diff + tests + report</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">05 / 10</div>
+      </section>
+
+      <section class="slide theme-nvidia" data-accent="#76b900" data-title="NVIDIA">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="kicker reveal">nvidia reference</div>
+            <h2 class="reveal">Black Kernel / Green Signal</h2>
+            <p class="lead reveal">검은 터미널 위에 녹색 활성 신호만 박히는 각지고 밀도 높은 엔지니어링 키노트.</p>
+            <div class="grid-2 reveal">
+              <div class="sample-panel"><strong>잘 맞는 작업</strong><p>AI runtime, capability matrix, performance benchmark.</p></div>
+              <div class="sample-panel"><strong>주의</strong><p>녹색은 활성 stage와 진행 표시로 제한한다.</p></div>
+            </div>
+          </div>
+          <div class="visual-stage reveal">
+            <div class="kernel-grid">
+              <div class="kernel-cell"><span>LOAD</span><strong>context</strong></div>
+              <div class="kernel-cell active"><span>RUN</span><strong>agent loop</strong></div>
+              <div class="kernel-cell"><span>CHECK</span><strong>evidence</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">06 / 10</div>
+      </section>
+
+      <section class="slide theme-bugatti" data-accent="#d4a017" data-title="Bugatti">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="kicker reveal">bugatti reference</div>
+            <h2 class="reveal">Blackbox Hypercar Console</h2>
+            <p class="lead reveal">거의 완전한 검정 위에 흰 타이포와 코드 스냅샷만 남기는 조용하고 비싼 기술 브리핑.</p>
+            <div class="tag-row reveal">
+              <span class="tag">incident</span><span class="tag">executive brief</span><span class="tag">postmortem</span>
+            </div>
+          </div>
+          <div class="visual-stage reveal">
+            <div class="blackbox">
+              <div class="trace-title">FAILURE TRACE / 03:17:42 KST</div>
+              <div class="trace-line">One cause. One decision. No noise.</div>
+              <div class="trace-meta"><span>scope: auth</span><span>risk: narrow</span><span>fix: verified</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">07 / 10</div>
+      </section>
+
+      <section class="slide theme-miro" data-accent="#ffd02f" data-title="Miro">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="kicker reveal">miro reference</div>
+            <h2 class="reveal">Canary Dev Board</h2>
+            <p class="lead reveal">화이트보드의 경쾌함을 개발자 문서와 아키텍처 리뷰용으로 정돈한 밝은 협업 워룸.</p>
+            <div class="grid-2 reveal">
+              <div class="sample-panel"><strong>잘 맞는 작업</strong><p>워크숍, flow mapping, PR 리뷰, product discovery.</p></div>
+              <div class="sample-panel"><strong>주의</strong><p>스티키가 많아지면 발표가 아니라 브레인스토밍 캡처처럼 보인다.</p></div>
+            </div>
+          </div>
+          <div class="visual-stage reveal">
+            <div class="board">
+              <div class="connector"></div>
+              <div class="sticky one">핵심 변경</div>
+              <div class="sticky two">검증 포인트</div>
+              <div class="sticky three">다음 액션</div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">08 / 10</div>
+      </section>
+
+      <section class="slide theme-index" data-accent="#cc785c" data-title="Choose">
+        <div class="slide-content">
+          <div class="kicker reveal">selection guide</div>
+          <h2 class="reveal">무슨 컨셉을 고를지는 산출물의 목적이 결정한다</h2>
+          <div class="choice-list reveal">
+            <div class="choice-row"><span>Claude</span><strong>교육, onboarding, skill 설명</strong><p>낯선 개념을 친절하고 신뢰감 있게 풀 때.</p></div>
+            <div class="choice-row"><span>Vercel</span><strong>devtool, 배포, platform 데모</strong><p>상태와 실행 속도를 정확하게 보여줄 때.</p></div>
+            <div class="choice-row"><span>Stripe</span><strong>API, 결제, SaaS 지표</strong><p>정교한 신뢰와 숫자 중심 설득이 필요할 때.</p></div>
+            <div class="choice-row"><span>NVIDIA</span><strong>AI infra, runtime, benchmark</strong><p>기술 밀도와 활성 stage를 강하게 보여줄 때.</p></div>
+            <div class="choice-row"><span>Bugatti</span><strong>임원 보고, 장애 분석, 결정 회의</strong><p>소음을 줄이고 한 가지 판단을 남길 때.</p></div>
+            <div class="choice-row"><span>Miro</span><strong>워크숍, 리뷰, 기획 협업</strong><p>사람들이 같이 구조를 이해하고 바꿔야 할 때.</p></div>
+          </div>
+        </div>
+        <div class="slide-number">09 / 10</div>
+      </section>
+
+      <section class="slide theme-index" data-accent="#cc785c" data-title="Close">
+        <div class="slide-content">
+          <div class="kicker reveal">frontend-studio workflow</div>
+          <h2 class="reveal">핵심은 예쁜 색을 고르는 것이 아니라, 작업에 맞는 화면 언어를 고르는 것</h2>
+          <div class="pipeline reveal">
+            <div class="pipe-step"><strong>1. 목적</strong><p>청중, 산출물, 완료 기준을 정한다.</p></div>
+            <div class="pipe-step"><strong>2. reference</strong><p>$get-design으로 방향을 고른다.</p></div>
+            <div class="pipe-step"><strong>3. build</strong><p>웹 UI 또는 slide HTML로 구현한다.</p></div>
+            <div class="pipe-step"><strong>4. verify</strong><p>desktop/mobile overflow와 contrast를 본다.</p></div>
+            <div class="pipe-step"><strong>5. reuse</strong><p>반복되면 custom Skill로 승격한다.</p></div>
+          </div>
+          <p class="small reveal">
+            Selected design references: claude, vercel, stripe, nvidia, bugatti, miro.
+          </p>
+        </div>
+        <div class="slide-number">10 / 10</div>
+      </section>
+    </main>
+
+    <script>
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const dots = document.querySelector(".nav-dots");
+      const progress = document.querySelector(".deck-progress span");
+      let activeIndex = 0;
+      let wheelLock = false;
+      let touchStartY = 0;
+
+      function goTo(index) {
+        const next = Math.max(0, Math.min(slides.length - 1, index));
+        slides[next].scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function setActive(index) {
+        activeIndex = index;
+        slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
+        dots.querySelectorAll("button").forEach((dot, i) => {
+          dot.setAttribute("aria-current", i === index ? "true" : "false");
+        });
+        const accent = slides[index].dataset.accent || "#cc785c";
+        document.documentElement.style.setProperty("--accent", accent);
+        progress.style.setProperty("--progress", `${((index + 1) / slides.length) * 100}%`);
+        history.replaceState(null, "", `#${index + 1}`);
+      }
+
+      slides.forEach((slide, index) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.setAttribute("aria-label", `${index + 1}: ${slide.dataset.title || "slide"}`);
+        dot.addEventListener("click", () => goTo(index));
+        dots.appendChild(dot);
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) setActive(slides.indexOf(entry.target));
+          });
+        },
+        { threshold: 0.62 }
+      );
+      slides.forEach((slide) => observer.observe(slide));
+
+      window.addEventListener("keydown", (event) => {
+        if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(event.key)) {
+          event.preventDefault();
+          goTo(activeIndex + 1);
+        }
+        if (["ArrowUp", "ArrowLeft", "PageUp"].includes(event.key)) {
+          event.preventDefault();
+          goTo(activeIndex - 1);
+        }
+        if (event.key === "Home") {
+          event.preventDefault();
+          goTo(0);
+        }
+        if (event.key === "End") {
+          event.preventDefault();
+          goTo(slides.length - 1);
+        }
+      });
+
+      window.addEventListener(
+        "wheel",
+        (event) => {
+          if (Math.abs(event.deltaY) < 42 || wheelLock) return;
+          wheelLock = true;
+          goTo(activeIndex + (event.deltaY > 0 ? 1 : -1));
+          setTimeout(() => {
+            wheelLock = false;
+          }, 650);
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "touchstart",
+        (event) => {
+          touchStartY = event.touches[0].clientY;
+        },
+        { passive: true }
+      );
+      window.addEventListener(
+        "touchend",
+        (event) => {
+          const diff = touchStartY - event.changedTouches[0].clientY;
+          if (Math.abs(diff) > 46) goTo(activeIndex + (diff > 0 ? 1 : -1));
+        },
+        { passive: true }
+      );
+
+      window.addEventListener("load", () => {
+        const requested = Number.parseInt(location.hash.replace("#", ""), 10);
+        if (Number.isFinite(requested) && requested >= 1 && requested <= slides.length) {
+          setTimeout(() => goTo(requested - 1), 50);
+        } else {
+          setActive(0);
+        }
+      });
+
+      window.__deckValidate = () => {
+        const viewport = { width: window.innerWidth, height: window.innerHeight };
+        return slides.map((slide, index) => {
+          const slideRect = slide.getBoundingClientRect();
+          const offenders = Array.from(slide.querySelectorAll("*"))
+            .map((node) => {
+              const box = node.getBoundingClientRect();
+              return {
+                tag: node.tagName.toLowerCase(),
+                className: String(node.className || ""),
+                left: box.left,
+                top: box.top,
+                right: box.right,
+                bottom: box.bottom,
+                width: box.width,
+                height: box.height
+              };
+            })
+            .filter((box) => box.width > 0 && box.height > 0)
+            .filter(
+              (box) =>
+                box.left < slideRect.left - 1 ||
+                box.right > slideRect.right + 1 ||
+                box.top < slideRect.top - 1 ||
+                box.bottom > slideRect.bottom + 1
+            );
+          return {
+            index: index + 1,
+            viewport,
+            scrollHeight: slide.scrollHeight,
+            clientHeight: slide.clientHeight,
+            hasOverflow: slide.scrollHeight > slide.clientHeight + 1 || offenders.length > 0,
+            offenders: offenders.slice(0, 6)
+          };
+        });
+      };
+    </script>
+  </body>
+</html>

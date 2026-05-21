@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chanhee Labs — Deck Gallery</title>
+    <meta name="description" content="A curated collection of interactive presentation decks on Claude Code, Codex, and Frontend Studio design concepts." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===========================================
+         CLAY DESIGN TOKENS
+         =========================================== */
+      :root {
+        --canvas: #fffaf0;
+        --surface-soft: #faf1dd;
+        --surface-card: #fff4df;
+        --surface-strong: #eadfc8;
+        --ink: #111111;
+        --body: #3a332b;
+        --muted: #6e6253;
+        --line: #e6d8bd;
+        --dark: #102525;
+        --pink: #ff4d8b;
+        --teal: #1a3a3a;
+        --lavender: #b8a4ed;
+        --peach: #ffb084;
+        --ochre: #e8b94a;
+        --mint: #a4d4c5;
+        --coral: #ff6b5a;
+        --sky: #8ecae6;
+        --white: #fffdf7;
+
+        --shadow: 0 clamp(8px, 1.8vw, 18px) 0 rgba(17, 17, 17, 0.18);
+        --shadow-small: 0 clamp(4px, 0.9vw, 10px) 0 rgba(17, 17, 17, 0.16);
+        --shadow-hover: 0 clamp(10px, 2.2vw, 22px) 0 rgba(17, 17, 17, 0.22);
+        --radius-xl: clamp(20px, 3vw, 38px);
+        --radius-lg: clamp(16px, 2vw, 28px);
+        --radius-md: clamp(10px, 1.4vw, 18px);
+
+        --font-display: "Baloo 2", cursive;
+        --font-body: "Nunito Sans", sans-serif;
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --duration-normal: 0.62s;
+      }
+
+      /* ===========================================
+         BASE
+         =========================================== */
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: var(--font-body);
+        color: var(--ink);
+        background: var(--canvas);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ===========================================
+         BACKGROUND
+         =========================================== */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(135deg, rgba(255, 176, 132, 0.14), transparent 40%),
+          linear-gradient(240deg, rgba(184, 164, 237, 0.12), transparent 35%),
+          linear-gradient(340deg, rgba(164, 212, 197, 0.16), transparent 40%);
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      /* Floating decorative blobs */
+      .blob {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.35;
+        pointer-events: none;
+        z-index: -1;
+        animation: blobFloat 12s ease-in-out infinite;
+      }
+
+      .blob-1 {
+        width: 300px;
+        height: 300px;
+        background: var(--peach);
+        top: 10%;
+        right: -5%;
+        animation-delay: 0s;
+      }
+
+      .blob-2 {
+        width: 250px;
+        height: 250px;
+        background: var(--lavender);
+        bottom: 15%;
+        left: -3%;
+        animation-delay: -4s;
+      }
+
+      .blob-3 {
+        width: 200px;
+        height: 200px;
+        background: var(--mint);
+        top: 50%;
+        left: 40%;
+        animation-delay: -8s;
+      }
+
+      @keyframes blobFloat {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(20px, -15px) scale(1.05); }
+        66% { transform: translate(-10px, 10px) scale(0.95); }
+      }
+
+      /* ===========================================
+         HEADER
+         =========================================== */
+      .page-header {
+        text-align: center;
+        padding: clamp(3rem, 8vh, 6rem) clamp(1.5rem, 5vw, 4rem) clamp(2rem, 4vh, 3rem);
+      }
+
+      .logo-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: clamp(0.4rem, 0.8vw, 0.6rem) clamp(1rem, 2vw, 1.5rem);
+        border: 3px solid var(--ink);
+        border-radius: 999px;
+        background: var(--mint);
+        box-shadow: var(--shadow-small);
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: clamp(0.75rem, 1.2vw, 1rem);
+        margin-bottom: clamp(1rem, 2vh, 1.5rem);
+        animation: badgeBounce 3s ease-in-out infinite;
+      }
+
+      @keyframes badgeBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+      }
+
+      .page-title {
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 7vw, 5.5rem);
+        line-height: 0.95;
+        color: var(--ink);
+        margin-bottom: clamp(0.5rem, 1.5vh, 1rem);
+      }
+
+      .page-title .accent {
+        color: var(--pink);
+      }
+
+      .page-subtitle {
+        font-size: clamp(0.9rem, 1.6vw, 1.25rem);
+        color: var(--body);
+        max-width: 46ch;
+        margin: 0 auto;
+        line-height: 1.5;
+        font-weight: 500;
+      }
+
+      /* Border frame like clay deck */
+      .page-frame {
+        position: fixed;
+        inset: clamp(8px, 1.2vw, 16px);
+        border: clamp(2px, 0.2vw, 3px) solid var(--ink);
+        border-radius: var(--radius-xl);
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      /* ===========================================
+         DECK GRID
+         =========================================== */
+      .deck-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+        gap: clamp(1.2rem, 2.5vw, 2rem);
+        padding: 0 clamp(2rem, 6vw, 5rem) clamp(4rem, 8vh, 6rem);
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+
+      /* ===========================================
+         DECK CARD
+         =========================================== */
+      .deck-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        border: clamp(2.5px, 0.3vw, 4px) solid var(--ink);
+        border-radius: var(--radius-xl);
+        background: var(--white);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        cursor: pointer;
+        transition:
+          transform 0.4s var(--ease-out-expo),
+          box-shadow 0.4s var(--ease-out-expo);
+        text-decoration: none;
+        opacity: 0;
+        transform: translateY(30px) scale(0.97);
+        animation: cardReveal 0.7s var(--ease-out-expo) forwards;
+      }
+
+      .deck-card:nth-child(1) { animation-delay: 0.1s; }
+      .deck-card:nth-child(2) { animation-delay: 0.2s; }
+      .deck-card:nth-child(3) { animation-delay: 0.3s; }
+      .deck-card:nth-child(4) { animation-delay: 0.4s; }
+      .deck-card:nth-child(5) { animation-delay: 0.5s; }
+
+      @keyframes cardReveal {
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .deck-card:hover {
+        transform: translateY(-6px) scale(1.015);
+        box-shadow: var(--shadow-hover);
+      }
+
+      .deck-card:active {
+        transform: translateY(-2px) scale(0.995);
+      }
+
+      /* Card Header Band */
+      .card-band {
+        position: relative;
+        padding: clamp(1.2rem, 2.5vw, 2rem) clamp(1.2rem, 2.5vw, 2rem) clamp(0.6rem, 1vw, 0.8rem);
+        overflow: hidden;
+      }
+
+      .card-band::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.12;
+        background:
+          radial-gradient(circle at 20% 30%, currentColor 1px, transparent 1px),
+          radial-gradient(circle at 70% 60%, currentColor 1px, transparent 1px),
+          radial-gradient(circle at 45% 80%, currentColor 0.5px, transparent 0.5px);
+        background-size: 28px 28px, 20px 20px, 14px 14px;
+      }
+
+      .card-emoji {
+        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        line-height: 1;
+        margin-bottom: clamp(0.4rem, 1vw, 0.6rem);
+        display: block;
+        filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.12));
+      }
+
+      .card-category {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.65rem;
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--white);
+        font-family: var(--font-display);
+        font-size: clamp(0.6rem, 0.9vw, 0.78rem);
+        font-weight: 800;
+        box-shadow: 2px 2px 0 rgba(17, 17, 17, 0.14);
+      }
+
+      /* Card Body */
+      .card-body {
+        flex: 1;
+        padding: clamp(0.8rem, 1.8vw, 1.4rem) clamp(1.2rem, 2.5vw, 2rem) clamp(1rem, 2vw, 1.6rem);
+        display: flex;
+        flex-direction: column;
+        gap: clamp(0.4rem, 0.8vw, 0.6rem);
+      }
+
+      .card-title {
+        font-family: var(--font-display);
+        font-size: clamp(1.15rem, 2.2vw, 1.65rem);
+        line-height: 1.1;
+        color: var(--ink);
+      }
+
+      .card-desc {
+        font-size: clamp(0.78rem, 1.15vw, 0.95rem);
+        color: var(--body);
+        line-height: 1.45;
+        flex: 1;
+      }
+
+      /* Card Footer */
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: clamp(0.6rem, 1.2vw, 0.9rem) clamp(1.2rem, 2.5vw, 2rem);
+        border-top: 2px solid var(--line);
+      }
+
+      .slide-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-display);
+        font-size: clamp(0.75rem, 1.1vw, 0.92rem);
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .slide-count svg {
+        width: clamp(14px, 1.5vw, 18px);
+        height: clamp(14px, 1.5vw, 18px);
+      }
+
+      .open-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.85rem;
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--white);
+        font-family: var(--font-display);
+        font-size: clamp(0.7rem, 1vw, 0.85rem);
+        font-weight: 700;
+        box-shadow: var(--shadow-small);
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+
+      .deck-card:hover .open-btn {
+        background: var(--pink);
+        transform: translateX(2px);
+      }
+
+      .open-btn svg {
+        width: 14px;
+        height: 14px;
+        transition: transform 0.3s var(--ease-out-expo);
+      }
+
+      .deck-card:hover .open-btn svg {
+        transform: translateX(3px);
+      }
+
+      /* Color bands per card */
+      .card-pink .card-band { background: var(--pink); color: var(--white); }
+      .card-pink .card-category { color: var(--pink); }
+
+      .card-lavender .card-band { background: var(--lavender); color: var(--ink); }
+      .card-lavender .card-category { color: #7c65c0; }
+
+      .card-ochre .card-band { background: var(--ochre); color: var(--ink); }
+      .card-ochre .card-category { color: #b08a1a; }
+
+      .card-mint .card-band { background: var(--mint); color: var(--ink); }
+      .card-mint .card-category { color: #3d8a71; }
+
+      .card-peach .card-band { background: var(--peach); color: var(--ink); }
+      .card-peach .card-category { color: #c97640; }
+
+      /* ===========================================
+         FOOTER
+         =========================================== */
+      .page-footer {
+        text-align: center;
+        padding: clamp(2rem, 4vh, 3rem) 1rem clamp(3rem, 5vh, 4rem);
+        color: var(--muted);
+        font-size: clamp(0.72rem, 1vw, 0.88rem);
+      }
+
+      .page-footer a {
+        color: var(--pink);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 2px;
+      }
+
+      .page-footer a:hover {
+        color: var(--ink);
+      }
+
+      .footer-line {
+        width: min(180px, 30vw);
+        height: 3px;
+        background: repeating-linear-gradient(
+          90deg,
+          var(--ink) 0 12px,
+          transparent 12px 20px
+        );
+        opacity: 0.12;
+        margin: 0 auto clamp(0.8rem, 1.5vh, 1.2rem);
+        border-radius: 999px;
+      }
+
+      /* ===========================================
+         RESPONSIVE
+         =========================================== */
+      @media (max-width: 600px) {
+        .deck-grid {
+          grid-template-columns: 1fr;
+          padding: 0 clamp(1.2rem, 4vw, 2rem) clamp(3rem, 6vh, 4rem);
+        }
+
+        .page-frame {
+          inset: 5px;
+        }
+      }
+
+      @media (min-width: 900px) {
+        .deck-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (min-width: 1200px) {
+        .deck-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.2s !important;
+        }
+        html {
+          scroll-behavior: auto;
+        }
+        .blob { display: none; }
+        .deck-card {
+          opacity: 1;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Decorative blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Border frame -->
+    <div class="page-frame" aria-hidden="true"></div>
+
+    <!-- Header -->
+    <header class="page-header">
+      <div class="logo-badge" id="logo-badge">
+        <span>🧪</span>
+        <span>Chanhee Labs</span>
+      </div>
+      <h1 class="page-title">
+        Deck <span class="accent">Gallery</span>
+      </h1>
+      <p class="page-subtitle">
+        Claude Code, Codex, 그리고 Frontend Studio에 대한 인터랙티브 프레젠테이션 컬렉션
+      </p>
+    </header>
+
+    <!-- Deck Grid -->
+    <main class="deck-grid" id="deck-grid">
+
+      <!-- Card 1: Agent Skills Clay Deck -->
+      <a href="decks/agent-skills-clay-deck.html" class="deck-card card-pink" id="card-agent-skills">
+        <div class="card-band">
+          <span class="card-emoji">🎯</span>
+          <span class="card-category">AI Agent Skills</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Claude & Codex Skills Trend</h2>
+          <p class="card-desc">
+            Claude와 Codex의 스킬 생태계 트렌드를 분석한 Clay 스타일 프레젠테이션 덱
+          </p>
+        </div>
+        <div class="card-footer">
+          <span class="slide-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            36 slides
+          </span>
+          <span class="open-btn">
+            열기
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Card 2: Claude & Codex Developer Guide -->
+      <a href="decks/claude-codex-developer-guide-deck.html" class="deck-card card-lavender" id="card-dev-guide">
+        <div class="card-band">
+          <span class="card-emoji">📖</span>
+          <span class="card-category">Developer Guide</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Claude Code & Codex Developer Guide</h2>
+          <p class="card-desc">
+            Claude Code와 Codex를 활용한 개발자 가이드. 아키텍처부터 실전 워크플로우까지 포괄적으로 다룹니다.
+          </p>
+        </div>
+        <div class="card-footer">
+          <span class="slide-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            72 slides
+          </span>
+          <span class="open-btn">
+            열기
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Card 3: Claude Style Developer Playbook -->
+      <a href="decks/claude-style-developer-playbook-slides.html" class="deck-card card-ochre" id="card-playbook">
+        <div class="card-band">
+          <span class="card-emoji">🎨</span>
+          <span class="card-category">Playbook</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Claude + Codex Developer Playbook</h2>
+          <p class="card-desc">
+            Claude의 독자적인 스타일로 제작된 개발자 플레이북. 실무 활용 시나리오와 베스트 프랙티스를 담았습니다.
+          </p>
+        </div>
+        <div class="card-footer">
+          <span class="slide-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            60 slides
+          </span>
+          <span class="open-btn">
+            열기
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Card 4: Frontend Studio All Design Concepts -->
+      <a href="decks/frontend-studio-all-design-concepts-deck.html" class="deck-card card-mint" id="card-all-concepts">
+        <div class="card-band">
+          <span class="card-emoji">✨</span>
+          <span class="card-category">Design System</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Frontend Studio All Design Concepts</h2>
+          <p class="card-desc">
+            Frontend Studio의 전체 디자인 컨셉을 한눈에 조망하는 레퍼런스 덱. 핵심 원칙과 패턴을 정리합니다.
+          </p>
+        </div>
+        <div class="card-footer">
+          <span class="slide-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            8 slides
+          </span>
+          <span class="open-btn">
+            열기
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- Card 5: Frontend Studio Concept Showcase -->
+      <a href="decks/frontend-studio-concept-showcase-deck.html" class="deck-card card-peach" id="card-showcase">
+        <div class="card-band">
+          <span class="card-emoji">🚀</span>
+          <span class="card-category">Showcase</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Frontend Studio Concept Showcase</h2>
+          <p class="card-desc">
+            Frontend Studio의 핵심 컨셉을 시각적으로 시연하는 쇼케이스 덱. 디자인 철학과 구현 사례를 확인하세요.
+          </p>
+        </div>
+        <div class="card-footer">
+          <span class="slide-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            30 slides
+          </span>
+          <span class="open-btn">
+            열기
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </a>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <div class="footer-line" aria-hidden="true"></div>
+      <p>
+        Built with 🧪 by <a href="https://github.com/JoChanhee" target="_blank" rel="noopener">Chanhee</a>
+        · Powered by Clay Design
+      </p>
+    </footer>
+
+    <script>
+      /* Intersection observer for scroll reveal (future-proof for more cards) */
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.style.animationPlayState = "running";
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+
+      document.querySelectorAll(".deck-card").forEach((card) => {
+        observer.observe(card);
+      });
+    </script>
+  </body>
+</html>

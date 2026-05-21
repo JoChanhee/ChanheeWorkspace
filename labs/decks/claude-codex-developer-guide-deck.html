@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude Code & Codex Developer Guide Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --canvas: #faf9f5;
+        --canvas-warm: #f5f0e8;
+        --surface: #efe9de;
+        --surface-soft: #f7f3eb;
+        --surface-strong: #e3d8c8;
+        --ink: #141413;
+        --body: #3d3d3a;
+        --muted: #6d6a62;
+        --line: #d8cab7;
+        --coral: #cc785c;
+        --coral-dark: #a9583e;
+        --teal: #4f9b8e;
+        --amber: #d99a45;
+        --plum: #80667e;
+        --dark: #181715;
+        --dark-soft: #25231f;
+        --on-dark: #faf9f5;
+        --radius: 8px;
+        --radius-soft: 12px;
+        --shadow: 0 18px 46px rgba(20, 20, 19, 0.1);
+        --shadow-tight: 0 10px 28px rgba(20, 20, 19, 0.1);
+        --font-display: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+        --font-body: "Manrope", "Noto Sans KR", sans-serif;
+        --font-mono: "JetBrains Mono", "SFMono-Regular", monospace;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ===========================================
+         VIEWPORT FITTING: MANDATORY BASE STYLES
+         Include this ENTIRE file in every presentation.
+         These styles ensure slides fit exactly in the viewport.
+         =========================================== */
+
+      /* 1. Lock html/body to viewport */
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+      }
+
+      html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* 2. Each slide = exact viewport height */
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile browsers */
+        overflow: hidden; /* CRITICAL: Prevent ANY overflow */
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* 3. Content container with flex for centering */
+      .slide-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 100%;
+        overflow: hidden; /* Double-protection against overflow */
+        padding: var(--slide-padding);
+      }
+
+      /* 4. ALL typography uses clamp() for responsive scaling */
+      :root {
+        /* Titles scale from mobile to desktop */
+        --title-size: clamp(1.5rem, 5vw, 4rem);
+        --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+        --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+
+        /* Body text */
+        --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+        --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+        /* Spacing scales with viewport */
+        --slide-padding: clamp(1rem, 4vw, 4rem);
+        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --element-gap: clamp(0.25rem, 1vw, 1rem);
+      }
+
+      /* 5. Cards/containers use viewport-relative max sizes */
+      .card,
+      .container,
+      .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+      }
+
+      /* 6. Lists auto-scale with viewport */
+      .feature-list,
+      .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+      }
+
+      .feature-list li,
+      .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+      }
+
+      /* 7. Grids adapt to available space */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+      }
+
+      /* 8. Images constrained to viewport */
+      img,
+      .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+      }
+
+      /* ===========================================
+         RESPONSIVE BREAKPOINTS
+         Aggressive scaling for smaller viewports
+         =========================================== */
+
+      /* Short viewports (< 700px height) */
+      @media (max-height: 700px) {
+        :root {
+          --slide-padding: clamp(0.75rem, 3vw, 2rem);
+          --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+          --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+          --h2-size: clamp(1rem, 3vw, 1.75rem);
+        }
+      }
+
+      /* Very short viewports (< 600px height) */
+      @media (max-height: 600px) {
+        :root {
+          --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+          --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+          --title-size: clamp(1.1rem, 4vw, 2rem);
+          --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+
+        /* Hide non-essential elements */
+        .nav-dots,
+        .keyboard-hint,
+        .decorative {
+          display: none;
+        }
+      }
+
+      /* Extremely short (landscape phones, < 500px height) */
+      @media (max-height: 500px) {
+        :root {
+          --slide-padding: clamp(0.4rem, 2vw, 1rem);
+          --title-size: clamp(1rem, 3.5vw, 1.5rem);
+          --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+          --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+      }
+
+      /* Narrow viewports (< 600px width) */
+      @media (max-width: 600px) {
+        :root {
+          --title-size: clamp(1.25rem, 7vw, 2.5rem);
+        }
+
+        /* Stack grids vertically */
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===========================================
+         REDUCED MOTION
+         Respect user preferences
+         =========================================== */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.2s !important;
+        }
+
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      /* Deck-specific viewport overrides. The mandatory base is preserved above. */
+      :root {
+        --title-size: clamp(2.1rem, 4.35rem, 5rem);
+        --h2-size: clamp(1.85rem, 3.25rem, 3.7rem);
+        --h3-size: clamp(1.05rem, 1.35rem, 1.65rem);
+        --body-size: clamp(0.9rem, 1.05rem, 1.15rem);
+        --small-size: clamp(0.72rem, 0.82rem, 0.9rem);
+        --slide-padding: clamp(1.2rem, 3.25rem, 4rem);
+        --content-gap: clamp(0.8rem, 1.35rem, 1.8rem);
+        --element-gap: clamp(0.45rem, 0.8rem, 1rem);
+      }
+
+      body {
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--font-body);
+        letter-spacing: 0;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .deck-progress {
+        position: fixed;
+        inset: 0 auto auto 0;
+        width: 100%;
+        height: 4px;
+        background: rgba(204, 120, 92, 0.16);
+        z-index: 30;
+      }
+
+      .deck-progress span {
+        display: block;
+        width: var(--progress, 5.55%);
+        height: 100%;
+        background: var(--coral);
+        transition: width 360ms var(--ease);
+      }
+
+      .nav-dots {
+        position: fixed;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        gap: 0.42rem;
+      }
+
+      .nav-dots button {
+        width: 0.58rem;
+        height: 0.58rem;
+        border: 1px solid rgba(20, 20, 19, 0.32);
+        border-radius: 999px;
+        background: rgba(250, 249, 245, 0.84);
+        cursor: pointer;
+        transition:
+          transform 200ms var(--ease),
+          background 200ms var(--ease),
+          border-color 200ms var(--ease);
+      }
+
+      .nav-dots button[aria-current="true"] {
+        background: var(--coral);
+        border-color: var(--coral-dark);
+        transform: scale(1.32);
+      }
+
+      .slide {
+        background:
+          linear-gradient(90deg, rgba(204, 120, 92, 0.08), transparent 26%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(239, 233, 222, 0.26)),
+          var(--canvas);
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0.5rem;
+        background: linear-gradient(180deg, var(--coral), var(--amber), var(--teal));
+        opacity: 0.86;
+      }
+
+      .slide::after {
+        content: "";
+        position: absolute;
+        inset: 1.2rem 1.2rem;
+        pointer-events: none;
+        border: 1px solid rgba(216, 202, 183, 0.56);
+        border-radius: var(--radius-soft);
+      }
+
+      .slide-content {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 1180px);
+        margin: 0 auto;
+        gap: var(--content-gap);
+      }
+
+      .slide-kicker {
+        display: inline-flex;
+        align-items: center;
+        width: max-content;
+        max-width: 100%;
+        gap: 0.55rem;
+        color: var(--coral-dark);
+        font-size: var(--small-size);
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .slide-kicker::before {
+        content: "";
+        display: inline-block;
+        width: 2.2rem;
+        height: 1px;
+        background: var(--coral);
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        max-width: 11ch;
+        font-size: var(--title-size);
+        line-height: 0.93;
+      }
+
+      h2 {
+        max-width: 13ch;
+        font-size: var(--h2-size);
+        line-height: 0.98;
+      }
+
+      h3 {
+        font-family: var(--font-body);
+        font-size: var(--h3-size);
+        line-height: 1.18;
+      }
+
+      p,
+      li {
+        color: var(--body);
+        font-size: var(--body-size);
+        line-height: 1.52;
+      }
+
+      .lead {
+        max-width: 58ch;
+        font-size: clamp(1rem, 1.24rem, 1.35rem);
+        font-weight: 600;
+        line-height: 1.45;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: var(--small-size);
+        line-height: 1.5;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .coral {
+        color: var(--coral-dark);
+      }
+
+      .layout-title {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(310px, 0.8fr);
+        align-items: center;
+        gap: clamp(1rem, 2rem, 2.4rem);
+      }
+
+      .layout-split {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        align-items: center;
+        gap: clamp(1rem, 1.6rem, 2rem);
+      }
+
+      .layout-balanced {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.8rem, 1.2rem, 1.6rem);
+      }
+
+      .grid-3,
+      .grid-4 {
+        display: grid;
+        gap: clamp(0.7rem, 1rem, 1.2rem);
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .panel,
+      .tile,
+      .code-panel,
+      .matrix-cell,
+      .source-item {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(239, 233, 222, 0.74);
+        box-shadow: var(--shadow-tight);
+      }
+
+      .panel {
+        padding: clamp(0.9rem, 1.25rem, 1.5rem);
+      }
+
+      .tile {
+        display: flex;
+        min-height: clamp(7.2rem, 8.2rem, 9.4rem);
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: clamp(0.78rem, 1rem, 1.2rem);
+      }
+
+      .tile strong,
+      .matrix-cell strong,
+      .source-item strong {
+        display: block;
+        color: var(--ink);
+        font-size: clamp(0.93rem, 1.05rem, 1.14rem);
+        line-height: 1.24;
+      }
+
+      .tile p,
+      .matrix-cell p,
+      .source-item p {
+        font-size: clamp(0.78rem, 0.9rem, 0.98rem);
+        line-height: 1.42;
+      }
+
+      .dark-panel,
+      .code-panel {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent),
+          var(--dark);
+        border-color: rgba(250, 249, 245, 0.14);
+        color: var(--on-dark);
+        box-shadow: var(--shadow);
+      }
+
+      .dark-panel h3,
+      .dark-panel strong,
+      .dark-panel p,
+      .dark-panel li,
+      .code-panel,
+      .code-panel p {
+        color: var(--on-dark);
+      }
+
+      .dark-panel .small,
+      .code-panel .small {
+        color: rgba(250, 249, 245, 0.72);
+      }
+
+      .code-panel {
+        overflow: hidden;
+        padding: clamp(0.85rem, 1.05rem, 1.25rem);
+      }
+
+      .code-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        padding-bottom: 0.7rem;
+        border-bottom: 1px solid rgba(250, 249, 245, 0.16);
+        color: rgba(250, 249, 245, 0.76);
+        font-family: var(--font-mono);
+        font-size: clamp(0.64rem, 0.74rem, 0.82rem);
+      }
+
+      pre {
+        margin-top: 0.76rem;
+        white-space: pre-wrap;
+        color: var(--on-dark);
+        font-family: var(--font-mono);
+        font-size: clamp(0.66rem, 0.8rem, 0.9rem);
+        line-height: 1.62;
+      }
+
+      .shell-line {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        border-top: 1px solid rgba(250, 249, 245, 0.12);
+        padding: 0.72rem 0;
+        color: var(--on-dark);
+        font-family: var(--font-mono);
+        font-size: clamp(0.66rem, 0.78rem, 0.88rem);
+      }
+
+      .shell-line:first-of-type {
+        border-top: 0;
+      }
+
+      .terminal-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--coral);
+        box-shadow: 0 0 0 4px rgba(204, 120, 92, 0.14);
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0.55rem;
+      }
+
+      .flow-step {
+        position: relative;
+        min-height: clamp(5.8rem, 6.6rem, 7.2rem);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: clamp(0.68rem, 0.82rem, 0.95rem);
+      }
+
+      .flow-step::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: -0.43rem;
+        width: 0.32rem;
+        height: 0.32rem;
+        border-top: 2px solid var(--coral);
+        border-right: 2px solid var(--coral);
+        transform: translateY(-50%) rotate(45deg);
+      }
+
+      .flow-step:last-child::after {
+        display: none;
+      }
+
+      .flow-step span,
+      .number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.65rem;
+        height: 1.65rem;
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--on-dark);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+
+      .flow-step strong {
+        display: block;
+        margin-top: 0.52rem;
+        color: var(--ink);
+        font-size: clamp(0.76rem, 0.92rem, 1rem);
+        line-height: 1.23;
+      }
+
+      .flow-step p {
+        margin-top: 0.28rem;
+        color: var(--muted);
+        font-size: clamp(0.64rem, 0.75rem, 0.83rem);
+        line-height: 1.34;
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: stretch;
+        gap: clamp(0.8rem, 1rem, 1.2rem);
+      }
+
+      .compare-card {
+        display: flex;
+        min-height: clamp(16rem, 19rem, 21rem);
+        flex-direction: column;
+        gap: 0.82rem;
+        padding: clamp(1rem, 1.2rem, 1.45rem);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+
+      .compare-card .label {
+        color: var(--coral-dark);
+        font-family: var(--font-mono);
+        font-size: clamp(0.66rem, 0.76rem, 0.86rem);
+        font-weight: 700;
+      }
+
+      .compare-card ul,
+      .clean-list {
+        display: grid;
+        gap: 0.48rem;
+        list-style: none;
+      }
+
+      .compare-card li,
+      .clean-list li {
+        position: relative;
+        padding-left: 1rem;
+        font-size: clamp(0.78rem, 0.9rem, 0.98rem);
+      }
+
+      .compare-card li::before,
+      .clean-list li::before {
+        content: "";
+        position: absolute;
+        top: 0.62em;
+        left: 0;
+        width: 0.34rem;
+        height: 0.34rem;
+        border-radius: 50%;
+        background: var(--coral);
+      }
+
+      .compare-center {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 0.4rem;
+        min-width: 6.2rem;
+      }
+
+      .compare-center span {
+        display: block;
+        width: 1px;
+        height: 4.5rem;
+        background: var(--line);
+      }
+
+      .compare-center strong {
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(1.65rem, 2rem, 2.25rem);
+        line-height: 1;
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: 0.76fr repeat(3, 1fr);
+        gap: 0.52rem;
+      }
+
+      .matrix-cell {
+        min-height: clamp(5.5rem, 6.4rem, 7.2rem);
+        padding: clamp(0.65rem, 0.78rem, 0.95rem);
+      }
+
+      .matrix-head {
+        background: var(--dark);
+        color: var(--on-dark);
+        border-color: var(--dark);
+      }
+
+      .matrix-head strong,
+      .matrix-head p {
+        color: var(--on-dark);
+      }
+
+      .screen-mock {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: clamp(18rem, 23rem, 28rem);
+        overflow: hidden;
+        border: 1px solid rgba(250, 249, 245, 0.16);
+        border-radius: var(--radius);
+        background: var(--dark);
+        box-shadow: var(--shadow);
+      }
+
+      .screen-top {
+        display: flex;
+        align-items: center;
+        gap: 0.42rem;
+        padding: 0.72rem 0.9rem;
+        border-bottom: 1px solid rgba(250, 249, 245, 0.14);
+      }
+
+      .screen-dot {
+        width: 0.56rem;
+        height: 0.56rem;
+        border-radius: 50%;
+        background: rgba(250, 249, 245, 0.36);
+      }
+
+      .screen-body {
+        display: grid;
+        grid-template-columns: 0.78fr 1.22fr;
+        gap: 0.9rem;
+        padding: clamp(0.85rem, 1.1rem, 1.3rem);
+      }
+
+      .screen-sidebar {
+        display: grid;
+        align-content: start;
+        gap: 0.48rem;
+      }
+
+      .screen-pill {
+        min-height: 1.9rem;
+        border-radius: var(--radius);
+        background: rgba(250, 249, 245, 0.1);
+      }
+
+      .screen-pill:nth-child(2) {
+        background: rgba(204, 120, 92, 0.72);
+      }
+
+      .screen-main {
+        display: grid;
+        align-content: start;
+        gap: 0.58rem;
+      }
+
+      .screen-card {
+        min-height: 3.2rem;
+        border-radius: var(--radius);
+        background: rgba(250, 249, 245, 0.92);
+      }
+
+      .screen-card:nth-child(2) {
+        min-height: 6.4rem;
+        background: linear-gradient(135deg, rgba(204, 120, 92, 0.96), rgba(217, 154, 69, 0.9));
+      }
+
+      .formula {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 0.56rem;
+      }
+
+      .formula-item {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 0.72rem;
+      }
+
+      .formula-item strong {
+        display: block;
+        color: var(--ink);
+        font-size: clamp(0.78rem, 0.92rem, 1rem);
+        line-height: 1.2;
+      }
+
+      .formula-item p {
+        margin-top: 0.28rem;
+        font-size: clamp(0.64rem, 0.74rem, 0.82rem);
+        line-height: 1.34;
+      }
+
+      .ladder {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        align-items: end;
+        gap: 0.7rem;
+        min-height: clamp(16rem, 21rem, 25rem);
+      }
+
+      .ladder-step {
+        display: grid;
+        align-content: end;
+        min-height: var(--h);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(180deg, rgba(204, 120, 92, 0.2), rgba(239, 233, 222, 0.9));
+        padding: 0.8rem;
+      }
+
+      .ladder-step strong {
+        color: var(--ink);
+        font-size: clamp(0.78rem, 0.95rem, 1.05rem);
+      }
+
+      .ladder-step p {
+        margin-top: 0.32rem;
+        font-size: clamp(0.64rem, 0.75rem, 0.82rem);
+        line-height: 1.35;
+      }
+
+      .quote-box {
+        border-left: 6px solid var(--coral);
+        padding: clamp(0.85rem, 1rem, 1.2rem) clamp(1rem, 1.35rem, 1.6rem);
+        background: rgba(239, 233, 222, 0.76);
+        border-radius: 0 var(--radius) var(--radius) 0;
+      }
+
+      .quote-box p {
+        max-width: 47ch;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(1.42rem, 2.15rem, 2.58rem);
+        line-height: 1.06;
+      }
+
+      .source-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.55rem;
+      }
+
+      section[data-title="Sources"] h2 {
+        max-width: 17ch;
+        font-size: clamp(1.75rem, 2.75rem, 3.2rem);
+      }
+
+      .source-item {
+        min-height: 5.2rem;
+        padding: 0.68rem;
+      }
+
+      .source-item a {
+        display: block;
+        overflow-wrap: anywhere;
+        color: var(--coral-dark);
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.76rem);
+        line-height: 1.36;
+      }
+
+      .slide-number {
+        position: absolute;
+        right: clamp(1.7rem, 2.4rem, 3rem);
+        bottom: clamp(1.2rem, 1.55rem, 2rem);
+        z-index: 4;
+        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+      }
+
+      .slide-title .slide-content {
+        justify-content: center;
+      }
+
+      .hero-mark {
+        display: grid;
+        min-height: clamp(22rem, 27rem, 30rem);
+        align-content: center;
+        gap: 0.78rem;
+        padding: clamp(1rem, 1.35rem, 1.6rem);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(204, 120, 92, 0.16), transparent 45%),
+          var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-mark .big {
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(5.4rem, 7.8rem, 8.8rem);
+        font-weight: 700;
+        line-height: 0.78;
+      }
+
+      .hero-mark .caption {
+        max-width: 24ch;
+        color: var(--body);
+        font-size: clamp(0.88rem, 1.02rem, 1.12rem);
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.78rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(250, 249, 245, 0.62);
+        color: var(--body);
+        font-size: clamp(0.66rem, 0.76rem, 0.84rem);
+        font-weight: 800;
+        line-height: 1;
+        padding: 0.42rem 0.68rem;
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(18px);
+        transition:
+          opacity 520ms var(--ease),
+          transform 520ms var(--ease);
+      }
+
+      .slide.is-active .reveal {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .slide.is-active .reveal:nth-child(2) {
+        transition-delay: 70ms;
+      }
+
+      .slide.is-active .reveal:nth-child(3) {
+        transition-delay: 130ms;
+      }
+
+      .slide.is-active .reveal:nth-child(4) {
+        transition-delay: 190ms;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+
+      @media (max-height: 760px) {
+        :root {
+          --title-size: clamp(1.9rem, 3.45rem, 3.8rem);
+          --h2-size: clamp(1.55rem, 2.55rem, 2.9rem);
+          --h3-size: clamp(0.98rem, 1.18rem, 1.32rem);
+          --body-size: clamp(0.78rem, 0.9rem, 0.98rem);
+          --small-size: clamp(0.62rem, 0.72rem, 0.8rem);
+          --slide-padding: clamp(0.8rem, 2rem, 2.6rem);
+          --content-gap: clamp(0.55rem, 0.95rem, 1.2rem);
+        }
+
+        .tile {
+          min-height: 6.15rem;
+          padding: 0.74rem;
+        }
+
+        .compare-card {
+          min-height: 13.8rem;
+        }
+
+        .screen-mock {
+          min-height: 18rem;
+        }
+
+        .flow-step {
+          min-height: 5.35rem;
+        }
+
+        .source-item {
+          min-height: 4.45rem;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .layout-title,
+        .layout-split,
+        .layout-balanced,
+        .compare {
+          grid-template-columns: 1fr;
+        }
+
+        .compare-center {
+          display: none;
+        }
+
+        .grid-3,
+        .grid-4,
+        .formula,
+        .ladder,
+        .source-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .flow {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .flow-step::after {
+          display: none;
+        }
+
+        .matrix {
+          grid-template-columns: 1fr;
+        }
+
+        .screen-body {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-mark {
+          min-height: 13rem;
+        }
+      }
+
+      @media (max-width: 560px) {
+        :root {
+          --title-size: clamp(1.85rem, 2.55rem, 2.9rem);
+          --h2-size: clamp(1.55rem, 2.1rem, 2.4rem);
+          --body-size: clamp(0.78rem, 0.88rem, 0.95rem);
+          --slide-padding: clamp(0.85rem, 1.1rem, 1.35rem);
+        }
+
+        .slide::after {
+          inset: 0.72rem;
+        }
+
+        .nav-dots {
+          display: none;
+        }
+
+        .slide-number {
+          right: 1rem;
+          bottom: 0.9rem;
+        }
+
+        .flow,
+        .source-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .source-item:nth-child(n + 7) {
+          display: none;
+        }
+
+        .compare-card {
+          min-height: auto;
+          padding: 0.72rem;
+        }
+
+        .compare-card li:nth-child(n + 3),
+        .flow .flow-step:nth-child(n + 5),
+        .grid-3 .tile:nth-child(n + 5),
+        .formula .formula-item:nth-child(n + 5),
+        .ladder .ladder-step:nth-child(n + 4) {
+          display: none;
+        }
+
+        .quote-box,
+        section[data-title="Custom Skill"] .code-panel,
+        section[data-title="Skill Flow"] .code-panel {
+          display: none;
+        }
+
+        .matrix {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.34rem;
+        }
+
+        .matrix-cell {
+          min-height: auto;
+          padding: 0.48rem;
+        }
+
+        .matrix-cell p {
+          display: none;
+        }
+
+        .matrix-cell strong {
+          font-size: 0.72rem;
+          line-height: 1.18;
+        }
+
+        .ladder {
+          min-height: auto;
+        }
+
+        .ladder-step {
+          min-height: auto !important;
+          padding: 0.65rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck-progress" aria-hidden="true"><span></span></div>
+    <nav class="nav-dots" aria-label="슬라이드 이동"></nav>
+
+    <main id="deck">
+      <section class="slide slide-title" data-title="Title">
+        <div class="slide-content layout-title">
+          <div>
+            <div class="slide-kicker reveal">Developer Agent Workflow</div>
+            <h1 class="reveal">Claude Code와 Codex를 잘 쓰는 법</h1>
+            <p class="lead reveal">
+              자동완성 도구가 아니라, 코드베이스를 읽고 수정하고 검증하는 작업 파트너로 다루는 방법.
+            </p>
+            <div class="tag-row reveal">
+              <span class="tag">agentic coding</span>
+              <span class="tag">skills</span>
+              <span class="tag">web UI</span>
+              <span class="tag">HTML slides</span>
+            </div>
+          </div>
+          <div class="hero-mark reveal" aria-hidden="true">
+            <div class="big">C/C</div>
+            <div class="caption">Context, tools, diff, tests, and reusable workflows.</div>
+          </div>
+        </div>
+        <div class="slide-number">01 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Goal">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">오늘의 목표</div>
+          <h2 class="reveal">명령어 암기가 아니라, 반복 가능한 협업 방식을 배운다</h2>
+          <div class="grid-4 reveal">
+            <div class="tile">
+              <strong>이해</strong>
+              <p>두 도구가 코드베이스를 읽고 판단하는 기본 구조를 잡는다.</p>
+            </div>
+            <div class="tile">
+              <strong>지시</strong>
+              <p>프롬프트, 프로젝트 지침, 스킬을 어디에 써야 하는지 구분한다.</p>
+            </div>
+            <div class="tile">
+              <strong>실행</strong>
+              <p>웹페이지, 발표 자료, 리팩터링 같은 작업을 실제 workflow로 만든다.</p>
+            </div>
+            <div class="tile">
+              <strong>검증</strong>
+              <p>테스트, 로그, 스크린샷, diff로 결과를 증명하는 습관을 세운다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">02 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Position">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">도구의 위치</div>
+          <h2 class="reveal">Claude Code와 Codex는 둘 다 작업 루프를 가진 coding agent다</h2>
+          <div class="compare reveal">
+            <div class="compare-card">
+              <span class="label">Claude Code</span>
+              <h3>터미널과 IDE 중심의 agentic coding</h3>
+              <ul>
+                <li>코드베이스를 읽고 계획을 세운 뒤 파일을 수정한다.</li>
+                <li>명령 실행, 테스트, 문서 조회를 작업 중에 결합한다.</li>
+                <li>CLAUDE.md와 Skills로 팀의 작업 방식을 축적한다.</li>
+              </ul>
+            </div>
+            <div class="compare-center" aria-hidden="true"><span></span><strong>same loop</strong><span></span></div>
+            <div class="compare-card">
+              <span class="label">OpenAI Codex</span>
+              <h3>CLI, cloud, IDE에서 동작하는 coding agent</h3>
+              <ul>
+                <li>로컬 또는 cloud 환경에서 checkout, 수정, 검증을 수행한다.</li>
+                <li>AGENTS.md로 프로젝트 지침과 검증 계약을 전달한다.</li>
+                <li>Skills와 subagents로 반복 작업을 분리하고 재사용한다.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">03 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Loop">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">내부 작업 구조</div>
+          <h2 class="reveal">좋은 결과는 Prompt에서 Report까지 끊기지 않을 때 나온다</h2>
+          <div class="flow reveal">
+            <div class="flow-step"><span>1</span><strong>Prompt</strong><p>목표와 제약을 받는다.</p></div>
+            <div class="flow-step"><span>2</span><strong>Context</strong><p>파일, 문서, 히스토리를 읽는다.</p></div>
+            <div class="flow-step"><span>3</span><strong>Plan</strong><p>작업 단위와 검증 기준을 잡는다.</p></div>
+            <div class="flow-step"><span>4</span><strong>Tools</strong><p>편집, 명령, 브라우저를 사용한다.</p></div>
+            <div class="flow-step"><span>5</span><strong>Verify</strong><p>테스트와 렌더링을 확인한다.</p></div>
+            <div class="flow-step"><span>6</span><strong>Report</strong><p>근거와 남은 리스크를 전달한다.</p></div>
+          </div>
+          <div class="quote-box reveal">
+            <p>agent에게 일을 맡긴다는 것은 결과뿐 아니라 판단 근거와 검증까지 위임한다는 뜻이다.</p>
+          </div>
+        </div>
+        <div class="slide-number">04 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Core">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">잘 쓰는 핵심</div>
+          <h2 class="reveal">기억해야 할 지침과 필요할 때 꺼내는 절차를 나눈다</h2>
+          <div class="grid-3 reveal">
+            <div class="tile dark-panel">
+              <strong>Always remember</strong>
+              <p>프로젝트의 build/test, PR 규칙, 금지 사항처럼 매번 필요한 내용.</p>
+            </div>
+            <div class="tile">
+              <strong>On-demand workflow</strong>
+              <p>발표 자료 생성, 디자인 적용, 보안 리뷰처럼 특정 상황에서만 필요한 절차.</p>
+            </div>
+            <div class="tile">
+              <strong>One-off prompt</strong>
+              <p>오늘 한 번만 필요한 목표, 범위, 예외, 보고 방식.</p>
+            </div>
+          </div>
+          <p class="lead reveal">항상 필요한 것은 프로젝트 지침으로, 반복 절차는 Skill로, 이번 맥락은 프롬프트로 둔다.</p>
+        </div>
+        <div class="slide-number">05 / 18</div>
+      </section>
+
+      <section class="slide" data-title="AGENTS.md">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="slide-kicker reveal">Codex project contract</div>
+            <h2 class="reveal">AGENTS.md는 Codex가 항상 따라야 할 작업 계약이다</h2>
+            <p class="lead reveal">
+              디렉터리 스코프를 가지며, 하위 폴더에서는 더 가까운 AGENTS.md가 우선한다.
+            </p>
+          </div>
+          <div class="code-panel reveal">
+            <div class="code-label"><span>AGENTS.md</span><span>project rules</span></div>
+            <pre>Build: pnpm build
+Test: pnpm test
+Lint: pnpm lint
+
+Directive: verify before claiming done
+Constraint: never commit directly to main
+PR: English title, Korean body</pre>
+          </div>
+        </div>
+        <div class="slide-number">06 / 18</div>
+      </section>
+
+      <section class="slide" data-title="CLAUDE.md">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="slide-kicker reveal">Claude memory surface</div>
+            <h2 class="reveal">CLAUDE.md는 Claude Code에게 팀의 작업 맥락을 남기는 곳이다</h2>
+            <p class="lead reveal">
+              자주 쓰는 명령, 아키텍처 메모, 코딩 규칙, 주의할 운영 습관을 프로젝트 안에 둔다.
+            </p>
+          </div>
+          <div class="grid-3 reveal">
+            <div class="tile">
+              <strong>Commands</strong>
+              <p>개발 서버, 테스트, 배포 검증처럼 반복 실행되는 명령.</p>
+            </div>
+            <div class="tile">
+              <strong>Architecture</strong>
+              <p>중요한 경계, 데이터 흐름, 피해야 할 shortcut.</p>
+            </div>
+            <div class="tile">
+              <strong>Team habits</strong>
+              <p>리뷰 기준, 보고 방식, 작업 전 확인해야 할 파일.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">07 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Skills">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="slide-kicker reveal">Agent Skills</div>
+            <h2 class="reveal">Skill은 필요할 때 로드되는 작은 작업 플레이북이다</h2>
+            <p class="lead reveal">
+              설명만 먼저 노출하고, 실제 지침과 스크립트는 트리거된 뒤에 읽는 progressive disclosure 구조를 쓴다.
+            </p>
+          </div>
+          <div class="code-panel reveal">
+            <div class="code-label"><span>SKILL.md</span><span>minimum shape</span></div>
+            <pre>---
+name: frontend-studio
+description: Use when creating polished UI or decks.
+---
+
+# Workflow
+1. Load the relevant design reference.
+2. Build the artifact.
+3. Run visual and overflow verification.</pre>
+          </div>
+        </div>
+        <div class="slide-number">08 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Separation">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">구분법</div>
+          <h2 class="reveal">항상성, 반복성, 일회성을 분리하면 agent가 덜 흔들린다</h2>
+          <div class="matrix reveal">
+            <div class="matrix-cell matrix-head"><strong>Surface</strong><p>어디에 둘까</p></div>
+            <div class="matrix-cell matrix-head"><strong>Always</strong><p>매 작업 적용</p></div>
+            <div class="matrix-cell matrix-head"><strong>Reusable</strong><p>상황별 반복</p></div>
+            <div class="matrix-cell matrix-head"><strong>One-off</strong><p>이번 요청만</p></div>
+
+            <div class="matrix-cell"><strong>Codex</strong><p>AGENTS.md</p></div>
+            <div class="matrix-cell"><strong>build/test, PR rule</strong><p>프로젝트 계약</p></div>
+            <div class="matrix-cell"><strong>$skill</strong><p>디자인, 리뷰, 배포</p></div>
+            <div class="matrix-cell"><strong>prompt</strong><p>오늘의 목표</p></div>
+
+            <div class="matrix-cell"><strong>Claude</strong><p>CLAUDE.md</p></div>
+            <div class="matrix-cell"><strong>team memory</strong><p>규칙과 명령</p></div>
+            <div class="matrix-cell"><strong>/skill</strong><p>문서, PPT, API</p></div>
+            <div class="matrix-cell"><strong>message</strong><p>특정 수정 요청</p></div>
+          </div>
+        </div>
+        <div class="slide-number">09 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Skill Flow">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">Skill 사용 흐름</div>
+          <h2 class="reveal">좋은 Skill은 agent가 읽을 순서를 설계해 둔다</h2>
+          <div class="flow reveal">
+            <div class="flow-step"><span>1</span><strong>Metadata</strong><p>name과 description만 먼저 노출한다.</p></div>
+            <div class="flow-step"><span>2</span><strong>Trigger</strong><p>명시 호출 또는 설명 매칭으로 선택된다.</p></div>
+            <div class="flow-step"><span>3</span><strong>SKILL.md</strong><p>작업 절차와 기준을 읽는다.</p></div>
+            <div class="flow-step"><span>4</span><strong>Assets</strong><p>필요한 템플릿과 참조만 로드한다.</p></div>
+            <div class="flow-step"><span>5</span><strong>Scripts</strong><p>반복 작업은 스크립트로 실행한다.</p></div>
+            <div class="flow-step"><span>6</span><strong>Evidence</strong><p>검증 결과를 보고한다.</p></div>
+          </div>
+          <div class="code-panel reveal">
+            <div class="code-label"><span>example invocation</span><span>developer request</span></div>
+            <div class="shell-line"><span class="terminal-dot"></span><span>$frontend-studio claude 디자인으로 ppt slide html 만들어줘</span></div>
+            <div class="shell-line"><span class="terminal-dot"></span><span>$skill-creator 반복되는 리뷰 절차를 skill로 만들어줘</span></div>
+          </div>
+        </div>
+        <div class="slide-number">10 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Web UI">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="slide-kicker reveal">예제 1: 웹페이지 만들기</div>
+            <h2 class="reveal">웹 UI 요청은 목적, 사용자, 분위기, 검증을 같이 줘야 한다</h2>
+            <ul class="clean-list reveal">
+              <li>사용자가 첫 화면에서 해야 할 일을 명확히 준다.</li>
+              <li>브랜드, 색, 참고 사이트, 금지할 느낌을 같이 적는다.</li>
+              <li>구현 뒤 서버를 띄우고 screenshot, mobile, overflow를 확인하게 한다.</li>
+            </ul>
+          </div>
+          <div class="screen-mock reveal" aria-hidden="true">
+            <div class="screen-top"><span class="screen-dot"></span><span class="screen-dot"></span><span class="screen-dot"></span></div>
+            <div class="screen-body">
+              <div class="screen-sidebar">
+                <div class="screen-pill"></div>
+                <div class="screen-pill"></div>
+                <div class="screen-pill"></div>
+                <div class="screen-pill"></div>
+              </div>
+              <div class="screen-main">
+                <div class="screen-card"></div>
+                <div class="screen-card"></div>
+                <div class="screen-card"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">11 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Slides">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="slide-kicker reveal">예제 2: PPT를 HTML로 만들기</div>
+            <h2 class="reveal">슬라이드는 내용을 붙여 넣는 일이 아니라 화면 밀도를 설계하는 일이다</h2>
+            <p class="lead reveal">
+              한 장에 담을 메시지를 줄이고, viewport별로 글자와 카드가 겹치지 않는지 검증해야 한다.
+            </p>
+          </div>
+          <div class="grid-3 reveal">
+            <div class="tile">
+              <strong>Story</strong>
+              <p>청중이 가져갈 한 문장을 먼저 정한다.</p>
+            </div>
+            <div class="tile">
+              <strong>Density</strong>
+              <p>표, 코드, 리스트가 많으면 장을 나눈다.</p>
+            </div>
+            <div class="tile">
+              <strong>Viewport</strong>
+              <p>1280x720과 모바일에서 overflow를 직접 확인한다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">12 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Custom Skill">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">예제 3: 커스텀 Skill 만들기</div>
+          <h2 class="reveal">반복되는 프롬프트는 Skill로 승격한다</h2>
+          <div class="formula reveal">
+            <div class="formula-item"><span class="number">1</span><strong>반복 발견</strong><p>같은 요청을 세 번 이상 한다.</p></div>
+            <div class="formula-item"><span class="number">2</span><strong>트리거 작성</strong><p>description에 사용 조건을 구체화한다.</p></div>
+            <div class="formula-item"><span class="number">3</span><strong>절차 분리</strong><p>읽기, 만들기, 검증 순서를 적는다.</p></div>
+            <div class="formula-item"><span class="number">4</span><strong>자산 추가</strong><p>scripts, templates, references를 둔다.</p></div>
+            <div class="formula-item"><span class="number">5</span><strong>검증</strong><p>샘플 요청으로 실제 동작을 확인한다.</p></div>
+          </div>
+          <div class="code-panel reveal">
+            <div class="code-label"><span>skill folder</span><span>portable package</span></div>
+            <pre>my-skill/
+  SKILL.md
+  scripts/
+  templates/
+  references/
+  examples/</pre>
+          </div>
+        </div>
+        <div class="slide-number">13 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Adoption">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">실전 적용 전략</div>
+          <h2 class="reveal">팀은 Ask에서 Automate로 천천히 올라가면 된다</h2>
+          <div class="ladder reveal">
+            <div class="ladder-step" style="--h: 7rem"><strong>Ask</strong><p>코드 경로와 원인을 물어본다.</p></div>
+            <div class="ladder-step" style="--h: 10rem"><strong>Patch</strong><p>작은 수정과 테스트를 맡긴다.</p></div>
+            <div class="ladder-step" style="--h: 13rem"><strong>Verify</strong><p>증거를 요구하고 재시도하게 한다.</p></div>
+            <div class="ladder-step" style="--h: 16rem"><strong>Delegate</strong><p>독립된 조사를 subagent에 나눈다.</p></div>
+            <div class="ladder-step" style="--h: 19rem"><strong>Automate</strong><p>반복 절차를 Skill과 스크립트로 만든다.</p></div>
+          </div>
+        </div>
+        <div class="slide-number">14 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Prompt Pattern">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">개발자 프롬프트 패턴</div>
+          <h2 class="reveal">좋은 요청은 agent가 판단할 기준을 먼저 준다</h2>
+          <div class="formula reveal">
+            <div class="formula-item"><strong>Goal</strong><p>무엇이 완료 상태인지.</p></div>
+            <div class="formula-item"><strong>Context</strong><p>관련 파일, 에러, 화면, 배경.</p></div>
+            <div class="formula-item"><strong>Constraints</strong><p>건드리면 안 되는 범위.</p></div>
+            <div class="formula-item"><strong>Evidence</strong><p>어떤 테스트와 로그가 필요한지.</p></div>
+            <div class="formula-item"><strong>Report</strong><p>최종 답변 형식과 언어.</p></div>
+          </div>
+          <div class="code-panel reveal">
+            <div class="code-label"><span>prompt skeleton</span><span>copyable pattern</span></div>
+            <pre>목표: onboarding 버튼이 눌리지 않는 원인을 고쳐줘.
+범위: settings-provider와 onboarding flow만 수정.
+검증: pnpm build, 관련 테스트, 브라우저 클릭 확인.
+보고: 원인, 수정 파일, 테스트 결과를 한국어로 정리.</pre>
+          </div>
+        </div>
+        <div class="slide-number">15 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Rules">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">실패를 줄이는 운영 규칙</div>
+          <h2 class="reveal">결과를 믿기 전에 evidence를 보게 만든다</h2>
+          <div class="grid-3 reveal">
+            <div class="tile">
+              <strong>Diff first</strong>
+              <p>어떤 파일이 왜 바뀌었는지 작은 단위로 확인한다.</p>
+            </div>
+            <div class="tile">
+              <strong>Tests and logs</strong>
+              <p>통과했다는 말보다 실제 명령과 핵심 출력을 남긴다.</p>
+            </div>
+            <div class="tile">
+              <strong>Screenshots</strong>
+              <p>UI 작업은 desktop/mobile 화면으로 검증한다.</p>
+            </div>
+            <div class="tile">
+              <strong>Review scripts</strong>
+              <p>Skill 안의 스크립트는 실행 권한과 네트워크 접근을 확인한다.</p>
+            </div>
+            <div class="tile">
+              <strong>Small scope</strong>
+              <p>한 번에 하나의 문제를 고치면 회귀 추적이 쉽다.</p>
+            </div>
+            <div class="tile">
+              <strong>No auto-merge</strong>
+              <p>agent 결과는 PR과 리뷰 흐름에서 검증한 뒤 합친다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-number">16 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Close">
+        <div class="slide-content layout-split">
+          <div>
+            <div class="slide-kicker reveal">마무리</div>
+            <h2 class="reveal">잘 쓰는 팀은 지시와 검증을 자산화한다</h2>
+            <p class="lead reveal">
+              프롬프트는 오늘의 맥락, AGENTS.md와 CLAUDE.md는 항상 기억할 계약, Skill은 반복 가능한 실행 절차다.
+            </p>
+          </div>
+          <div class="panel dark-panel reveal">
+            <h3>다음부터 남겨야 할 것</h3>
+            <ul class="clean-list">
+              <li>성공한 요청 패턴</li>
+              <li>자주 쓰는 검증 명령</li>
+              <li>팀에서 반복되는 산출물 템플릿</li>
+              <li>실패를 줄였던 운영 규칙</li>
+            </ul>
+          </div>
+        </div>
+        <div class="slide-number">17 / 18</div>
+      </section>
+
+      <section class="slide" data-title="Sources">
+        <div class="slide-content">
+          <div class="slide-kicker reveal">Sources</div>
+          <h2 class="reveal">공식 문서와 공개 skill catalog를 기준으로 정리했다</h2>
+          <div class="source-grid reveal">
+            <div class="source-item"><strong>Claude Code overview</strong><a href="https://code.claude.com/docs/en/overview">code.claude.com/docs/en/overview</a></div>
+            <div class="source-item"><strong>How Claude Code works</strong><a href="https://code.claude.com/docs/en/how-claude-code-works">code.claude.com/docs/en/how-claude-code-works</a></div>
+            <div class="source-item"><strong>Claude Code memory</strong><a href="https://code.claude.com/docs/en/memory">code.claude.com/docs/en/memory</a></div>
+            <div class="source-item"><strong>Claude Code skills</strong><a href="https://code.claude.com/docs/en/skills">code.claude.com/docs/en/skills</a></div>
+            <div class="source-item"><strong>Claude Agent Skills</strong><a href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview">platform.claude.com/docs/en/agents-and-tools/agent-skills/overview</a></div>
+            <div class="source-item"><strong>Anthropic skills repo</strong><a href="https://github.com/anthropics/skills">github.com/anthropics/skills</a></div>
+            <div class="source-item"><strong>Codex overview</strong><a href="https://developers.openai.com/codex/">developers.openai.com/codex</a></div>
+            <div class="source-item"><strong>Codex CLI</strong><a href="https://developers.openai.com/codex/cli">developers.openai.com/codex/cli</a></div>
+            <div class="source-item"><strong>Codex cloud</strong><a href="https://developers.openai.com/codex/cloud">developers.openai.com/codex/cloud</a></div>
+            <div class="source-item"><strong>AGENTS.md guide</strong><a href="https://developers.openai.com/codex/guides/agents-md">developers.openai.com/codex/guides/agents-md</a></div>
+            <div class="source-item"><strong>Codex skills</strong><a href="https://developers.openai.com/codex/skills">developers.openai.com/codex/skills</a></div>
+            <div class="source-item"><strong>OpenAI skills repo</strong><a href="https://github.com/openai/skills">github.com/openai/skills</a></div>
+          </div>
+        </div>
+        <div class="slide-number">18 / 18</div>
+      </section>
+    </main>
+
+    <script>
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const progress = document.querySelector(".deck-progress span");
+      const dots = document.querySelector(".nav-dots");
+      let activeIndex = 0;
+      let wheelLock = false;
+      let touchStartY = 0;
+
+      function goTo(index, replaceHash = false) {
+        const next = Math.max(0, Math.min(slides.length - 1, index));
+        slides[next].scrollIntoView({ behavior: "smooth", block: "start" });
+        if (replaceHash) {
+          history.replaceState(null, "", `#${next + 1}`);
+        }
+      }
+
+      function setActive(index) {
+        activeIndex = index;
+        slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
+        dots.querySelectorAll("button").forEach((dot, i) => {
+          dot.setAttribute("aria-current", i === index ? "true" : "false");
+        });
+        progress.style.setProperty("--progress", `${((index + 1) / slides.length) * 100}%`);
+        history.replaceState(null, "", `#${index + 1}`);
+      }
+
+      slides.forEach((slide, index) => {
+        const button = document.createElement("button");
+        const title = slide.dataset.title || `Slide ${index + 1}`;
+        button.type = "button";
+        button.setAttribute("aria-label", `${index + 1}: ${title}`);
+        button.addEventListener("click", () => goTo(index, true));
+        dots.appendChild(button);
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActive(slides.indexOf(entry.target));
+            }
+          });
+        },
+        { threshold: 0.62 }
+      );
+
+      slides.forEach((slide) => observer.observe(slide));
+
+      window.addEventListener("keydown", (event) => {
+        const forward = ["ArrowDown", "ArrowRight", "PageDown", " "];
+        const backward = ["ArrowUp", "ArrowLeft", "PageUp"];
+        if (forward.includes(event.key)) {
+          event.preventDefault();
+          goTo(activeIndex + 1, true);
+        }
+        if (backward.includes(event.key)) {
+          event.preventDefault();
+          goTo(activeIndex - 1, true);
+        }
+        if (event.key === "Home") {
+          event.preventDefault();
+          goTo(0, true);
+        }
+        if (event.key === "End") {
+          event.preventDefault();
+          goTo(slides.length - 1, true);
+        }
+      });
+
+      window.addEventListener(
+        "wheel",
+        (event) => {
+          if (Math.abs(event.deltaY) < 42 || wheelLock) return;
+          wheelLock = true;
+          goTo(activeIndex + (event.deltaY > 0 ? 1 : -1), true);
+          setTimeout(() => {
+            wheelLock = false;
+          }, 650);
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "touchstart",
+        (event) => {
+          touchStartY = event.touches[0].clientY;
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "touchend",
+        (event) => {
+          const diff = touchStartY - event.changedTouches[0].clientY;
+          if (Math.abs(diff) > 46) {
+            goTo(activeIndex + (diff > 0 ? 1 : -1), true);
+          }
+        },
+        { passive: true }
+      );
+
+      window.addEventListener("load", () => {
+        const requested = Number.parseInt(location.hash.replace("#", ""), 10);
+        if (Number.isFinite(requested) && requested >= 1 && requested <= slides.length) {
+          setTimeout(() => goTo(requested - 1), 50);
+        } else {
+          setActive(0);
+        }
+      });
+
+      window.__deckValidate = () => {
+        const viewport = { width: window.innerWidth, height: window.innerHeight };
+        return slides.map((slide, index) => {
+          const content = slide.querySelector(".slide-content");
+          const rect = content.getBoundingClientRect();
+          const slideRect = slide.getBoundingClientRect();
+          const offenders = Array.from(slide.querySelectorAll("*"))
+            .map((node) => {
+              const box = node.getBoundingClientRect();
+              return {
+                tag: node.tagName.toLowerCase(),
+                className: node.className,
+                left: box.left,
+                top: box.top,
+                right: box.right,
+                bottom: box.bottom,
+                width: box.width,
+                height: box.height
+              };
+            })
+            .filter((box) => box.width > 0 && box.height > 0)
+            .filter(
+              (box) =>
+                box.left < slideRect.left - 1 ||
+                box.right > slideRect.right + 1 ||
+                box.top < slideRect.top - 1 ||
+                box.bottom > slideRect.bottom + 1
+            );
+          return {
+            index: index + 1,
+            viewport,
+            scrollHeight: slide.scrollHeight,
+            clientHeight: slide.clientHeight,
+            contentHeight: Math.round(rect.height),
+            hasOverflow: slide.scrollHeight > slide.clientHeight + 1 || offenders.length > 0,
+            offenders: offenders.slice(0, 6)
+          };
+        });
+      };
+    </script>
+  </body>
+</html>

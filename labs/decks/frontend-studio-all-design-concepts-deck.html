@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontend Studio All Design Concepts</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Bricolage+Grotesque:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #f6f1e7;
+        --ink: #121211;
+        --muted: #5e5a52;
+        --line: rgba(18, 18, 17, 0.16);
+        --accent: #cc785c;
+        --dark: #111111;
+        --font-display: "Bricolage Grotesque", "Manrope", sans-serif;
+        --font-serif: "Cormorant Garamond", Georgia, serif;
+        --font-body: "Manrope", sans-serif;
+        --font-mono: "JetBrains Mono", "IBM Plex Mono", monospace;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ===========================================
+         VIEWPORT FITTING: MANDATORY BASE STYLES
+         Include this ENTIRE file in every presentation.
+         These styles ensure slides fit exactly in the viewport.
+         =========================================== */
+
+      /* 1. Lock html/body to viewport */
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+      }
+
+      html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+      }
+
+      /* 2. Each slide = exact viewport height */
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile browsers */
+        overflow: hidden; /* CRITICAL: Prevent ANY overflow */
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* 3. Content container with flex for centering */
+      .slide-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-height: 100%;
+        overflow: hidden; /* Double-protection against overflow */
+        padding: var(--slide-padding);
+      }
+
+      /* 4. ALL typography uses clamp() for responsive scaling */
+      :root {
+        /* Titles scale from mobile to desktop */
+        --title-size: clamp(1.5rem, 5vw, 4rem);
+        --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+        --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+
+        /* Body text */
+        --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+        --small-size: clamp(0.65rem, 1vw, 0.875rem);
+
+        /* Spacing scales with viewport */
+        --slide-padding: clamp(1rem, 4vw, 4rem);
+        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --element-gap: clamp(0.25rem, 1vw, 1rem);
+      }
+
+      /* 5. Cards/containers use viewport-relative max sizes */
+      .card,
+      .container,
+      .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+      }
+
+      /* 6. Lists auto-scale with viewport */
+      .feature-list,
+      .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+      }
+
+      .feature-list li,
+      .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+      }
+
+      /* 7. Grids adapt to available space */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+      }
+
+      /* 8. Images constrained to viewport */
+      img,
+      .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+      }
+
+      /* ===========================================
+         RESPONSIVE BREAKPOINTS
+         Aggressive scaling for smaller viewports
+         =========================================== */
+
+      /* Short viewports (< 700px height) */
+      @media (max-height: 700px) {
+        :root {
+          --slide-padding: clamp(0.75rem, 3vw, 2rem);
+          --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+          --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+          --h2-size: clamp(1rem, 3vw, 1.75rem);
+        }
+      }
+
+      /* Very short viewports (< 600px height) */
+      @media (max-height: 600px) {
+        :root {
+          --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+          --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+          --title-size: clamp(1.1rem, 4vw, 2rem);
+          --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+
+        /* Hide non-essential elements */
+        .nav-dots,
+        .keyboard-hint,
+        .decorative {
+          display: none;
+        }
+      }
+
+      /* Extremely short (landscape phones, < 500px height) */
+      @media (max-height: 500px) {
+        :root {
+          --slide-padding: clamp(0.4rem, 2vw, 1rem);
+          --title-size: clamp(1rem, 3.5vw, 1.5rem);
+          --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+          --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+      }
+
+      /* Narrow viewports (< 600px width) */
+      @media (max-width: 600px) {
+        :root {
+          --title-size: clamp(1.25rem, 7vw, 2.5rem);
+        }
+
+        /* Stack grids vertically */
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===========================================
+         REDUCED MOTION
+         Respect user preferences
+         =========================================== */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.2s !important;
+        }
+
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
+      :root {
+        --title-size: clamp(2.2rem, 4.5rem, 5.2rem);
+        --h2-size: clamp(1.72rem, 3.05rem, 3.55rem);
+        --h3-size: clamp(1rem, 1.22rem, 1.42rem);
+        --body-size: clamp(0.84rem, 0.98rem, 1.08rem);
+        --small-size: clamp(0.62rem, 0.74rem, 0.84rem);
+        --slide-padding: clamp(1.05rem, 3.15rem, 4rem);
+        --content-gap: clamp(0.68rem, 1rem, 1.35rem);
+        --element-gap: clamp(0.42rem, 0.65rem, 0.9rem);
+      }
+
+      html {
+        scrollbar-width: none;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none;
+      }
+
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-body);
+        letter-spacing: 0;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      li,
+      span,
+      button {
+        letter-spacing: 0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        font-weight: 800;
+        line-height: 0.96;
+        word-break: keep-all;
+      }
+
+      h1 {
+        max-width: 11ch;
+        font-size: var(--title-size);
+      }
+
+      h2 {
+        max-width: 14ch;
+        font-size: var(--h2-size);
+        line-height: 1.04;
+      }
+
+      h3 {
+        font-size: var(--h3-size);
+        line-height: 1.12;
+      }
+
+      p,
+      li {
+        font-size: var(--body-size);
+        line-height: 1.46;
+      }
+
+      .deck-progress {
+        position: fixed;
+        inset: 0 auto auto 0;
+        z-index: 50;
+        width: 100%;
+        height: clamp(0.18rem, 0.24rem, 0.28rem);
+        background: rgba(18, 18, 17, 0.1);
+      }
+
+      .deck-progress span {
+        display: block;
+        width: var(--progress, 6.25%);
+        height: 100%;
+        background: var(--accent);
+        transition: width 280ms var(--ease), background 280ms var(--ease);
+      }
+
+      .nav-dots {
+        position: fixed;
+        right: clamp(0.7rem, 1rem, 1.2rem);
+        top: 50%;
+        z-index: 50;
+        display: grid;
+        gap: clamp(0.26rem, 0.36rem, 0.44rem);
+        transform: translateY(-50%);
+      }
+
+      .nav-dots button {
+        width: clamp(0.42rem, 0.52rem, 0.62rem);
+        height: clamp(0.42rem, 0.52rem, 0.62rem);
+        border: 1px solid rgba(18, 18, 17, 0.34);
+        border-radius: 999px;
+        background: rgba(246, 241, 231, 0.78);
+        cursor: pointer;
+      }
+
+      .nav-dots button[aria-current="true"] {
+        border-color: var(--accent);
+        background: var(--accent);
+        transform: scale(1.28);
+      }
+
+      .slide {
+        background:
+          linear-gradient(90deg, var(--wash, rgba(204, 120, 92, 0.12)), transparent 42%),
+          var(--paper);
+        color: var(--ink);
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: clamp(0.75rem, 1.2rem, 1.45rem);
+        pointer-events: none;
+        border: 1px solid var(--frame, rgba(18, 18, 17, 0.14));
+      }
+
+      .slide-content {
+        position: relative;
+        z-index: 2;
+        width: min(100%, 1180px);
+        margin: 0 auto;
+        gap: var(--content-gap);
+      }
+
+      .layout-title {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(340px, 1.05fr);
+        align-items: center;
+        gap: clamp(1rem, 1.5rem, 2rem);
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        width: max-content;
+        max-width: 100%;
+        gap: clamp(0.42rem, 0.56rem, 0.72rem);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .kicker::before {
+        content: "";
+        width: clamp(1.5rem, 2rem, 2.4rem);
+        height: 1px;
+        background: currentColor;
+      }
+
+      .lead {
+        max-width: 60ch;
+        color: var(--muted);
+        font-size: clamp(1rem, 1.16rem, 1.3rem);
+        font-weight: 700;
+        line-height: 1.42;
+        word-break: keep-all;
+      }
+
+      .stat-grid,
+      .category-grid,
+      .chooser-grid {
+        display: grid;
+        gap: clamp(0.55rem, 0.75rem, 0.95rem);
+      }
+
+      .stat-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .category-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .chooser-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .stat-card,
+      .ref-card,
+      .chooser-card {
+        border: 1px solid var(--card-line, rgba(18, 18, 17, 0.14));
+        border-radius: clamp(0.45rem, 0.55rem, 0.7rem);
+        background: var(--card-bg, rgba(255, 255, 255, 0.62));
+      }
+
+      .stat-card {
+        min-height: clamp(8rem, 9.4rem, 11rem);
+        padding: clamp(0.82rem, 1rem, 1.18rem);
+      }
+
+      .stat-card strong {
+        display: block;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-size: clamp(1.45rem, 2.1rem, 2.5rem);
+        line-height: 1;
+      }
+
+      .stat-card p {
+        margin-top: clamp(0.45rem, 0.6rem, 0.78rem);
+        color: var(--muted);
+        font-size: clamp(0.72rem, 0.84rem, 0.94rem);
+        line-height: 1.38;
+      }
+
+      .title-hero {
+        --paper: #0c0b09;
+        --ink: #faf9f5;
+        --muted: rgba(250, 249, 245, 0.72);
+        --accent: #ffcc33;
+        --frame: rgba(250, 249, 245, 0.18);
+        background:
+          radial-gradient(circle at 74% 18%, rgba(255, 208, 47, 0.18), transparent 22%),
+          radial-gradient(circle at 16% 80%, rgba(204, 120, 92, 0.22), transparent 25%),
+          #0c0b09;
+      }
+
+      .title-hero h1 {
+        max-width: 14ch;
+        font-size: clamp(2.1rem, 4.45rem, 5.05rem);
+      }
+
+      .title-hero .lead {
+        max-width: 45ch;
+        color: var(--muted);
+      }
+
+      .title-showcase {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.56rem, 0.78rem, 1rem);
+        min-height: clamp(21rem, 27rem, 31rem);
+      }
+
+      .showcase-panel {
+        position: relative;
+        display: grid;
+        align-content: end;
+        overflow: hidden;
+        min-height: clamp(9.4rem, 13rem, 15rem);
+        border: 1px solid var(--panel-line);
+        border-radius: var(--panel-radius, 10px);
+        background: var(--panel-bg);
+        color: var(--panel-fg);
+        padding: clamp(0.74rem, 0.95rem, 1.15rem);
+      }
+
+      .showcase-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--panel-pattern, transparent);
+        opacity: 0.9;
+      }
+
+      .showcase-panel strong,
+      .showcase-panel span {
+        position: relative;
+        z-index: 1;
+        display: block;
+      }
+
+      .showcase-panel span {
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.78rem);
+        font-weight: 800;
+      }
+
+      .showcase-panel strong {
+        margin-top: 0.42rem;
+        max-width: 10ch;
+        font-family: var(--panel-font, var(--font-display));
+        font-size: clamp(1.22rem, 1.7rem, 2rem);
+        line-height: 0.98;
+      }
+
+      .panel-warm {
+        --panel-bg: #faf9f5;
+        --panel-fg: #141413;
+        --panel-line: #d8cab7;
+        --panel-font: var(--font-serif);
+        --panel-pattern: linear-gradient(135deg, rgba(204, 120, 92, 0.22), transparent 48%);
+      }
+
+      .panel-terminal {
+        --panel-bg: #050505;
+        --panel-fg: #00dfd8;
+        --panel-line: rgba(0, 223, 216, 0.28);
+        --panel-radius: 2px;
+        --panel-font: "Archivo", sans-serif;
+        --panel-pattern: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 12px);
+      }
+
+      .panel-board {
+        --panel-bg: #ffd02f;
+        --panel-fg: #1c1c1e;
+        --panel-line: #1c1c1e;
+        --panel-radius: 14px;
+        --panel-pattern: linear-gradient(#e3b900 1px, transparent 1px), linear-gradient(90deg, #e3b900 1px, transparent 1px);
+        background-size: 28px 28px;
+        box-shadow: 6px 6px 0 #1c1c1e;
+      }
+
+      .panel-luxury {
+        --panel-bg: #000000;
+        --panel-fg: #ffffff;
+        --panel-line: #d4a017;
+        --panel-radius: 0;
+        --panel-font: var(--font-serif);
+        --panel-pattern: linear-gradient(90deg, transparent 0 60%, rgba(212, 160, 23, 0.24) 60% 61%, transparent 61%);
+      }
+
+      .hero-metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: clamp(0.42rem, 0.58rem, 0.76rem);
+        margin-top: clamp(0.8rem, 1.1rem, 1.4rem);
+      }
+
+      .hero-metrics span {
+        border: 1px solid rgba(250, 249, 245, 0.22);
+        border-radius: 999px;
+        color: rgba(250, 249, 245, 0.86);
+        font-family: var(--font-mono);
+        font-size: clamp(0.62rem, 0.72rem, 0.82rem);
+        font-weight: 800;
+        padding: 0.48rem 0.72rem;
+      }
+
+      .ref-card {
+        position: relative;
+        min-height: clamp(8.45rem, 9.7rem, 11.2rem);
+        overflow: hidden;
+        padding: clamp(0.7rem, 0.86rem, 1rem);
+      }
+
+      .ref-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: clamp(0.36rem, 0.45rem, 0.55rem);
+        background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3));
+      }
+
+      .ref-card .slug {
+        display: inline-flex;
+        margin-top: clamp(0.44rem, 0.55rem, 0.64rem);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.67rem, 0.75rem);
+        font-weight: 800;
+      }
+
+      .ref-card strong {
+        display: block;
+        margin-top: clamp(0.34rem, 0.44rem, 0.52rem);
+        color: var(--ink);
+        font-size: clamp(0.9rem, 1.05rem, 1.16rem);
+        line-height: 1.12;
+      }
+
+      .ref-card p {
+        margin-top: clamp(0.34rem, 0.45rem, 0.55rem);
+        color: var(--muted);
+        font-size: clamp(0.66rem, 0.78rem, 0.88rem);
+        line-height: 1.36;
+      }
+
+      .swatches {
+        display: flex;
+        gap: clamp(0.24rem, 0.32rem, 0.42rem);
+        margin-top: clamp(0.54rem, 0.68rem, 0.84rem);
+      }
+
+      .swatches i {
+        display: block;
+        width: clamp(1.2rem, 1.45rem, 1.7rem);
+        height: clamp(0.32rem, 0.42rem, 0.52rem);
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .chapter-badge {
+        display: grid;
+        min-height: clamp(18rem, 23rem, 27rem);
+        align-content: end;
+        border: 1px solid var(--card-line, rgba(18, 18, 17, 0.14));
+        border-radius: clamp(0.45rem, 0.55rem, 0.7rem);
+        background:
+          linear-gradient(135deg, var(--accent), var(--accent2)),
+          var(--dark);
+        color: var(--on-accent, #ffffff);
+        padding: clamp(1rem, 1.35rem, 1.7rem);
+      }
+
+      .chapter-badge span {
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        font-weight: 800;
+      }
+
+      .chapter-badge strong {
+        display: block;
+        margin-top: clamp(0.42rem, 0.58rem, 0.72rem);
+        max-width: 10ch;
+        font-family: var(--font-display);
+        font-size: clamp(2.2rem, 3.1rem, 3.65rem);
+        line-height: 0.95;
+      }
+
+      .chapter-badge p {
+        margin-top: clamp(0.56rem, 0.7rem, 0.9rem);
+        max-width: 28ch;
+        font-size: clamp(0.78rem, 0.92rem, 1.02rem);
+        font-weight: 700;
+      }
+
+      .overview-list {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(0.42rem, 0.58rem, 0.75rem);
+      }
+
+      .overview-pill {
+        border: 1px solid rgba(18, 18, 17, 0.16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.58);
+        padding: clamp(0.42rem, 0.52rem, 0.65rem) clamp(0.5rem, 0.68rem, 0.86rem);
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: clamp(0.58rem, 0.68rem, 0.78rem);
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .map-slide {
+        --paper: #f4efe6;
+        --ink: #141413;
+        --muted: #5c564d;
+        --accent: #4262ff;
+        --frame: rgba(66, 98, 255, 0.22);
+        background:
+          linear-gradient(90deg, rgba(66, 98, 255, 0.12), transparent 34%),
+          linear-gradient(#e6ddd0 1px, transparent 1px),
+          linear-gradient(90deg, #e6ddd0 1px, transparent 1px),
+          #f4efe6;
+        background-size: auto, 38px 38px, 38px 38px, auto;
+      }
+
+      .genre-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(0.48rem, 0.66rem, 0.82rem);
+      }
+
+      .genre-card {
+        position: relative;
+        min-height: clamp(4.45rem, 5.35rem, 6.2rem);
+        overflow: hidden;
+        border: 1px solid var(--stroke);
+        border-radius: var(--radius, 9px);
+        background: var(--bg);
+        color: var(--fg);
+        padding: clamp(0.58rem, 0.72rem, 0.9rem);
+      }
+
+      .genre-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: clamp(0.32rem, 0.4rem, 0.48rem);
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+      }
+
+      .genre-card strong {
+        display: block;
+        margin-top: 0.28rem;
+        color: inherit;
+        font-size: clamp(0.76rem, 0.9rem, 1rem);
+        line-height: 1.14;
+      }
+
+      .genre-card span {
+        display: block;
+        margin-top: 0.32rem;
+        color: var(--soft);
+        font-family: var(--font-mono);
+        font-size: clamp(0.54rem, 0.63rem, 0.72rem);
+        font-weight: 800;
+      }
+
+      .chooser-card {
+        min-height: clamp(7rem, 8.4rem, 9.6rem);
+        padding: clamp(0.7rem, 0.88rem, 1.05rem);
+      }
+
+      .chooser-card strong {
+        display: block;
+        color: var(--ink);
+        font-size: clamp(0.86rem, 1rem, 1.1rem);
+      }
+
+      .chooser-card p {
+        margin-top: clamp(0.32rem, 0.45rem, 0.58rem);
+        color: var(--muted);
+        font-size: clamp(0.66rem, 0.78rem, 0.88rem);
+        line-height: 1.36;
+      }
+
+      .slide-number {
+        position: absolute;
+        right: clamp(1.35rem, 2rem, 2.6rem);
+        bottom: clamp(0.95rem, 1.3rem, 1.7rem);
+        z-index: 4;
+        color: rgba(18, 18, 17, 0.58);
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+      }
+
+      .dark-slide {
+        --paper: #070707;
+        --ink: #ffffff;
+        --muted: rgba(255, 255, 255, 0.72);
+        --line: rgba(255, 255, 255, 0.16);
+        --card-bg: rgba(255, 255, 255, 0.07);
+        --card-line: rgba(255, 255, 255, 0.14);
+        color: var(--ink);
+      }
+
+      .dark-slide .ref-card strong,
+      .dark-slide .stat-card strong,
+      .dark-slide .chooser-card strong {
+        color: var(--ink);
+      }
+
+      .dark-slide .ref-card p,
+      .dark-slide .stat-card p,
+      .dark-slide .chooser-card p {
+        color: var(--muted);
+      }
+
+      .dark-slide .slide-number {
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .skin-art {
+        position: absolute;
+        inset: clamp(1rem, 1.6rem, 2rem);
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .skin-art span {
+        position: absolute;
+        display: block;
+      }
+
+      .skin-warm {
+        --paper: #faf9f5;
+        --ink: #141413;
+        --muted: #5f5b53;
+        --card-bg: #efe9de;
+        --card-line: #d8cab7;
+        --frame: rgba(204, 120, 92, 0.22);
+        --font-display: var(--font-serif);
+      }
+
+      .skin-warm .skin-art span:nth-child(1) {
+        right: 7%;
+        top: 14%;
+        width: clamp(12rem, 20rem, 25rem);
+        height: clamp(12rem, 20rem, 25rem);
+        border: 1px solid rgba(204, 120, 92, 0.22);
+        border-radius: 999px;
+      }
+
+      .skin-warm .skin-art span:nth-child(2) {
+        right: 14%;
+        bottom: 12%;
+        width: clamp(8rem, 13rem, 16rem);
+        height: clamp(2.5rem, 4rem, 5rem);
+        background: rgba(204, 120, 92, 0.13);
+      }
+
+      .skin-workspace {
+        --paper: #ffffff;
+        --ink: #1c1c1e;
+        --muted: #414042;
+        --card-bg: #ffffff;
+        --card-line: #1c1c1e;
+        --frame: #1c1c1e;
+        background-image:
+          linear-gradient(#ececec 1px, transparent 1px),
+          linear-gradient(90deg, #ececec 1px, transparent 1px);
+        background-size: clamp(1.4rem, 2rem, 2.4rem) clamp(1.4rem, 2rem, 2.4rem);
+      }
+
+      .skin-workspace .ref-card {
+        border-width: 2px;
+        box-shadow: 5px 5px 0 #1c1c1e;
+      }
+
+      .skin-workspace .ref-card:nth-child(1),
+      .skin-workspace .ref-card:nth-child(4) {
+        background: #ffd02f;
+      }
+
+      .skin-workspace .ref-card:nth-child(2),
+      .skin-workspace .ref-card:nth-child(5) {
+        background: #0fbcb0;
+      }
+
+      .skin-workspace .ref-card:nth-child(3),
+      .skin-workspace .ref-card:nth-child(6) {
+        background: #ff9999;
+      }
+
+      .skin-builder {
+        --paper: #f7f8ff;
+        --ink: #111827;
+        --muted: #4b5563;
+        --card-bg: rgba(255, 255, 255, 0.82);
+        --card-line: rgba(94, 106, 210, 0.22);
+        background:
+          linear-gradient(120deg, rgba(94, 106, 210, 0.18), transparent 34%),
+          linear-gradient(300deg, rgba(242, 78, 30, 0.18), transparent 38%),
+          #f7f8ff;
+      }
+
+      .skin-builder .ref-card {
+        box-shadow: 0 16px 40px rgba(94, 106, 210, 0.13);
+      }
+
+      .skin-builder .skin-art span:nth-child(1) {
+        right: 4%;
+        top: 10%;
+        width: 34%;
+        height: 12%;
+        background: linear-gradient(90deg, #f24e1e, #a259ff, #0acf83);
+        border-radius: 999px;
+      }
+
+      .skin-darkdev {
+        --paper: #050505;
+        --ink: #f8fafc;
+        --muted: rgba(248, 250, 252, 0.68);
+        --card-bg: #0f1117;
+        --card-line: rgba(0, 223, 216, 0.28);
+        --frame: rgba(0, 223, 216, 0.24);
+        --font-display: "Archivo", sans-serif;
+        background:
+          repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 14px),
+          radial-gradient(circle at 84% 22%, rgba(121, 40, 202, 0.35), transparent 26%),
+          #050505;
+      }
+
+      .skin-darkdev .ref-card {
+        border-radius: 2px;
+      }
+
+      .skin-docs {
+        --paper: #fbfdf9;
+        --ink: #0b1f1a;
+        --muted: #385349;
+        --card-bg: #ffffff;
+        --card-line: rgba(19, 170, 82, 0.25);
+        --frame: rgba(118, 185, 0, 0.38);
+        background:
+          linear-gradient(90deg, rgba(118, 185, 0, 0.16), transparent 30%),
+          #fbfdf9;
+      }
+
+      .skin-docs .ref-card {
+        border-radius: 2px;
+        box-shadow: none;
+      }
+
+      .skin-docs .ref-card::after {
+        content: "";
+        position: absolute;
+        right: 0.7rem;
+        bottom: 0.7rem;
+        width: 0.52rem;
+        height: 0.52rem;
+        background: var(--accent);
+      }
+
+      .skin-fintech {
+        --paper: #f6f9fc;
+        --ink: #0d253d;
+        --muted: #506175;
+        --card-bg: rgba(255, 255, 255, 0.88);
+        --card-line: rgba(83, 58, 253, 0.2);
+        background:
+          radial-gradient(circle at 72% 16%, rgba(83, 58, 253, 0.32), transparent 22%),
+          radial-gradient(circle at 90% 44%, rgba(240, 185, 11, 0.22), transparent 20%),
+          linear-gradient(180deg, #f6f9fc, #eef4fb);
+      }
+
+      .skin-fintech .ref-card {
+        border-radius: 8px;
+        box-shadow: 0 18px 48px rgba(13, 37, 61, 0.12);
+      }
+
+      .skin-luxury {
+        --paper: #000000;
+        --ink: #ffffff;
+        --muted: #cccccc;
+        --card-bg: #050505;
+        --card-line: #262626;
+        --frame: rgba(212, 160, 23, 0.35);
+        --font-display: var(--font-serif);
+        background: #000000;
+      }
+
+      .skin-luxury .ref-card {
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .skin-luxury .ref-card::before {
+        height: 1px;
+      }
+
+      .skin-luxury .skin-art span:nth-child(1) {
+        right: 7%;
+        top: 18%;
+        width: 38%;
+        height: 1px;
+        background: rgba(212, 160, 23, 0.8);
+      }
+
+      .skin-motion {
+        --paper: #f8f9fb;
+        --ink: #101010;
+        --muted: #4b4b4b;
+        --card-bg: #ffffff;
+        --card-line: rgba(232, 33, 39, 0.18);
+        background:
+          linear-gradient(112deg, transparent 0 50%, rgba(232, 33, 39, 0.08) 50% 54%, transparent 54%),
+          linear-gradient(292deg, transparent 0 46%, rgba(91, 124, 250, 0.16) 46% 50%, transparent 50%),
+          #f8f9fb;
+      }
+
+      .skin-motion .ref-card {
+        border-radius: 14px 2px 14px 2px;
+      }
+
+      .skin-media {
+        --paper: #fffdf7;
+        --ink: #0b0b0b;
+        --muted: #4d4d4d;
+        --card-bg: #ffffff;
+        --card-line: #0b0b0b;
+        --font-display: "Archivo", sans-serif;
+        background:
+          linear-gradient(90deg, rgba(255, 77, 0, 0.18) 0 12%, transparent 12%),
+          #fffdf7;
+      }
+
+      .skin-media h2 {
+        max-width: 11ch;
+        text-transform: uppercase;
+      }
+
+      .skin-media .ref-card {
+        border-width: 2px;
+        border-radius: 0;
+      }
+
+      .skin-commerce {
+        --paper: #f5f5f7;
+        --ink: #111111;
+        --muted: #515154;
+        --card-bg: #ffffff;
+        --card-line: rgba(17, 17, 17, 0.12);
+        background:
+          linear-gradient(180deg, rgba(29, 185, 84, 0.12), transparent 36%),
+          #f5f5f7;
+      }
+
+      .skin-commerce .ref-card {
+        border-radius: 18px;
+        box-shadow: 0 22px 54px rgba(0, 0, 0, 0.08);
+      }
+
+      .skin-ai {
+        --paper: #080910;
+        --ink: #ffffff;
+        --muted: rgba(255, 255, 255, 0.74);
+        --card-bg: rgba(255, 255, 255, 0.08);
+        --card-line: rgba(109, 93, 252, 0.28);
+        --frame: rgba(0, 166, 126, 0.26);
+        background:
+          radial-gradient(circle at 76% 18%, rgba(109, 93, 252, 0.38), transparent 24%),
+          radial-gradient(circle at 48% 80%, rgba(0, 166, 126, 0.25), transparent 25%),
+          #080910;
+      }
+
+      .skin-ai .ref-card {
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      }
+
+      .skin-enterprise {
+        --paper: #f4f7fb;
+        --ink: #161616;
+        --muted: #525252;
+        --card-bg: #ffffff;
+        --card-line: rgba(15, 98, 254, 0.22);
+        --font-display: "IBM Plex Mono", monospace;
+        background:
+          linear-gradient(#dce6f8 1px, transparent 1px),
+          linear-gradient(90deg, #dce6f8 1px, transparent 1px),
+          #f4f7fb;
+        background-size: 46px 46px;
+      }
+
+      .skin-enterprise .ref-card {
+        border-radius: 0;
+      }
+
+      .skin-api {
+        --paper: #fff8f2;
+        --ink: #1b120f;
+        --muted: #664d43;
+        --card-bg: #ffffff;
+        --card-line: rgba(251, 84, 43, 0.25);
+        background:
+          linear-gradient(90deg, rgba(251, 84, 43, 0.16), transparent 32%),
+          #fff8f2;
+      }
+
+      .skin-api .ref-card {
+        border-radius: 8px;
+        box-shadow: 7px 7px 0 rgba(251, 84, 43, 0.16);
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(clamp(0.7rem, 1rem, 1.2rem));
+        transition: opacity 500ms var(--ease), transform 500ms var(--ease);
+      }
+
+      .slide.is-active .reveal {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .slide.is-active .reveal:nth-child(2) {
+        transition-delay: 70ms;
+      }
+
+      .slide.is-active .reveal:nth-child(3) {
+        transition-delay: 130ms;
+      }
+
+      .slide.is-active .reveal:nth-child(4) {
+        transition-delay: 190ms;
+      }
+
+      @media (max-height: 760px) {
+        :root {
+          --title-size: clamp(1.85rem, 3.25rem, 3.8rem);
+          --h2-size: clamp(1.45rem, 2.35rem, 2.78rem);
+          --h3-size: clamp(0.88rem, 1.04rem, 1.18rem);
+          --body-size: clamp(0.72rem, 0.84rem, 0.94rem);
+          --small-size: clamp(0.56rem, 0.66rem, 0.74rem);
+          --slide-padding: clamp(0.76rem, 2rem, 2.45rem);
+          --content-gap: clamp(0.5rem, 0.78rem, 1rem);
+        }
+
+        .ref-card {
+          min-height: clamp(7.1rem, 8.05rem, 9rem);
+        }
+
+        .chapter-badge {
+          min-height: clamp(15rem, 19rem, 22rem);
+        }
+
+        .stat-card,
+        .chooser-card {
+          min-height: clamp(6.2rem, 7.2rem, 8.4rem);
+        }
+
+        .title-showcase {
+          min-height: clamp(17rem, 21rem, 24rem);
+        }
+
+        .showcase-panel {
+          min-height: clamp(7.6rem, 9.8rem, 11rem);
+        }
+      }
+
+      @media (max-width: 920px) {
+        .layout-title,
+        .stat-grid,
+        .category-grid,
+        .chooser-grid,
+        .overview-list,
+        .genre-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .chapter-badge {
+          min-height: clamp(9rem, 11rem, 13rem);
+        }
+      }
+
+      @media (max-width: 560px) {
+        :root {
+          --title-size: clamp(1.75rem, 2.42rem, 2.8rem);
+          --h2-size: clamp(1.35rem, 1.95rem, 2.22rem);
+          --body-size: clamp(0.74rem, 0.84rem, 0.92rem);
+          --slide-padding: clamp(0.78rem, 1.05rem, 1.25rem);
+        }
+
+        .slide::before {
+          inset: clamp(0.58rem, 0.7rem, 0.82rem);
+        }
+
+        .nav-dots {
+          display: none;
+        }
+
+        .overview-pill:nth-child(n + 7),
+        .stat-card:nth-child(n + 3),
+        .chooser-card:nth-child(n + 5),
+        .ref-card:nth-child(n + 5),
+        .genre-card:nth-child(n + 7),
+        .showcase-panel:nth-child(n + 3) {
+          display: none;
+        }
+
+        .ref-card {
+          min-height: clamp(6.2rem, 7rem, 7.8rem);
+        }
+
+        .chapter-badge {
+          min-height: clamp(7.4rem, 8.6rem, 9.6rem);
+        }
+
+        .chapter-badge strong {
+          font-size: clamp(1.55rem, 2.1rem, 2.4rem);
+        }
+
+        .title-showcase {
+          min-height: auto;
+        }
+
+        .showcase-panel {
+          min-height: clamp(8.4rem, 10rem, 11rem);
+        }
+
+        .genre-card {
+          min-height: clamp(4.1rem, 4.8rem, 5.4rem);
+        }
+
+        .title-hero h1 {
+          max-width: 11ch;
+          font-size: clamp(2.3rem, 2.65rem, 2.9rem);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck-progress" aria-hidden="true"><span></span></div>
+    <nav class="nav-dots" aria-label="슬라이드 이동"></nav>
+    <main id="deck"></main>
+
+    <script>
+      const catalog = [
+        {
+          skin: "warm",
+          title: "Warm & Friendly SaaS",
+          subtitle: "교육, 온보딩, 친절한 서비스 설명에 맞는 따뜻한 화면 언어.",
+          accent: "#cc785c",
+          accent2: "#e8a55a",
+          wash: "rgba(204, 120, 92, 0.14)",
+          refs: [
+            ["airbnb", "human hospitality", "서비스 흐름, 예약, warm consumer UX", ["#ff5a5f", "#ffffff", "#222222"]],
+            ["claude", "warm editorial", "agent 설명, tutorial, developer guide", ["#faf9f5", "#cc785c", "#181715"]],
+            ["intercom", "friendly support", "CS, help center, onboarding sequence", ["#1f8fff", "#fff4d7", "#111111"]],
+            ["zapier", "automation friendly", "workflow builder, integration story", ["#ff4a00", "#fff3e8", "#201515"]],
+            ["mastercard", "warm commerce", "결제, network, trust diagram", ["#eb001b", "#ff5f00", "#f79e1b"]],
+            ["clay", "soft playful CRM", "lead enrichment, bento profile UI", ["#ffb084", "#faf1dd", "#102525"]]
+          ]
+        },
+        {
+          skin: "workspace",
+          title: "Workspace & Productivity",
+          subtitle: "업무 도구, 협업, 지식 정리, 워크숍 화면에 맞는 구조.",
+          accent: "#4262ff",
+          accent2: "#0fbcb0",
+          wash: "rgba(66, 98, 255, 0.12)",
+          refs: [
+            ["airtable", "structured workspace", "database UI, kanban, internal tool", ["#f82b60", "#18bfff", "#ffffff"]],
+            ["cal", "calendar minimal", "예약, time slot, scheduling settings", ["#111111", "#f5f5f5", "#e5e5e5"]],
+            ["miro", "collaboration board", "워크숍, mapping, sticky note deck", ["#ffd02f", "#1c1c1e", "#0fbcb0"]],
+            ["notion", "document OS", "docs, wiki, knowledge base, memo", ["#ffffff", "#191919", "#e9e5dc"]],
+            ["slack", "team messaging", "협업 흐름, notification, channel map", ["#611f69", "#36c5f0", "#ecb22e"]],
+            ["superhuman", "focused productivity", "email, command palette, premium workflow", ["#101010", "#f4f2ea", "#6f7cff"]]
+          ]
+        },
+        {
+          skin: "builder",
+          title: "Product Builder SaaS",
+          subtitle: "제품 설계, 실험, growth, CMS까지 다루는 modern SaaS 레퍼런스.",
+          accent: "#5e6ad2",
+          accent2: "#f24e1e",
+          wash: "rgba(94, 106, 210, 0.12)",
+          refs: [
+            ["figma", "design collaboration", "design system, prototype, asset browser", ["#f24e1e", "#a259ff", "#0acf83"]],
+            ["framer", "motion landing", "interactive prototype, launch page", ["#0055ff", "#000000", "#ffffff"]],
+            ["linear.app", "precise product ops", "issue tracker, roadmap, changelog", ["#5e6ad2", "#08090a", "#f7f8fb"]],
+            ["lovable", "AI app builder", "prompt-to-app, playful build flow", ["#ff6b6b", "#7c3aed", "#fff7ed"]],
+            ["posthog", "product analytics", "experiments, funnels, event tracking", ["#f54e00", "#1d1512", "#f7efe6"]],
+            ["sanity", "structured content", "CMS studio, schema, editorial ops", ["#f03e2f", "#101112", "#f7f7f8"]]
+          ]
+        },
+        {
+          skin: "darkdev",
+          title: "Dark Developer Tools",
+          subtitle: "CLI, IDE, agent runtime, deployment처럼 개발자 집중도가 높은 표면.",
+          accent: "#00dfd8",
+          accent2: "#7928ca",
+          wash: "rgba(0, 223, 216, 0.1)",
+          dark: true,
+          refs: [
+            ["cursor", "AI code editor", "IDE, refactor flow, agent side panel", ["#000000", "#ffffff", "#7c3aed"]],
+            ["opencode.ai", "terminal agent", "CLI, multi-agent, code execution", ["#0b0b0f", "#f9fafb", "#22d3ee"]],
+            ["raycast", "command center", "launcher, extension catalog, power user UX", ["#ff6363", "#141414", "#ffffff"]],
+            ["vercel", "deploy minimal", "platform, preview URL, production status", ["#ffffff", "#171717", "#0070f3"]],
+            ["voltagent", "agent framework", "observability, green developer docs", ["#0c1116", "#00d084", "#f4f8f6"]],
+            ["warp", "modern terminal", "AI shell, command blocks, team terminal", ["#111827", "#6ee7f9", "#a78bfa"]]
+          ]
+        },
+        {
+          skin: "docs",
+          title: "Data & Technical Docs",
+          subtitle: "데이터베이스, 인프라, 문서, SDK 매트릭스에 맞는 차분한 technical UI.",
+          accent: "#76b900",
+          accent2: "#13aa52",
+          wash: "rgba(118, 185, 0, 0.12)",
+          refs: [
+            ["clickhouse", "high contrast analytics", "OLAP, benchmark, yellow-black data deck", ["#ffcc01", "#000000", "#ffffff"]],
+            ["hashicorp", "infra discipline", "cloud infra, policy, enterprise diagram", ["#844fba", "#111111", "#f7f7f7"]],
+            ["mintlify", "developer docs", "docs landing, API reference, changelog", ["#18e299", "#0f172a", "#f8fafc"]],
+            ["mongodb", "green data product", "database, schema, query explorer", ["#13aa52", "#001e2b", "#ffffff"]],
+            ["nvidia", "green signal", "AI infra, runtime pipeline, benchmark", ["#76b900", "#000000", "#ffffff"]],
+            ["supabase", "open source backend", "database dashboard, auth, realtime docs", ["#3ecf8e", "#1f2937", "#f8fafc"]]
+          ]
+        },
+        {
+          skin: "fintech",
+          title: "Fintech & Crypto Trust",
+          subtitle: "돈, 신뢰, 성능, 리스크를 다루는 product surface.",
+          accent: "#533afd",
+          accent2: "#f0b90b",
+          wash: "rgba(83, 58, 253, 0.11)",
+          refs: [
+            ["binance", "black yellow market", "exchange, price board, trading state", ["#f0b90b", "#0b0e11", "#ffffff"]],
+            ["coinbase", "blue trust", "wallet, onboarding, compliance dashboard", ["#0052ff", "#ffffff", "#0a0b0d"]],
+            ["kraken", "purple crypto", "exchange, portfolio, risk analytics", ["#7132f5", "#0b1020", "#ffffff"]],
+            ["revolut", "consumer finance", "banking app, spend insight, card UI", ["#191c1f", "#ffffff", "#0075eb"]],
+            ["stripe", "indigo runtime", "API, payments, metrics, infra trust", ["#635bff", "#0a2540", "#f6f9fc"]],
+            ["wise", "clear money movement", "transfer flow, transparent pricing", ["#9fe870", "#163300", "#ffffff"]]
+          ]
+        },
+        {
+          skin: "luxury",
+          title: "Black Luxury Performance",
+          subtitle: "프리미엄, 고성능, 집중된 임원 보고나 high-end product page.",
+          accent: "#d4a017",
+          accent2: "#ffffff",
+          wash: "rgba(212, 160, 23, 0.08)",
+          dark: true,
+          refs: [
+            ["bmw-m", "motorsport precision", "performance spec, dynamic comparison", ["#0066b1", "#e22718", "#000000"]],
+            ["bugatti", "hypercar blackbox", "executive brief, luxury incident report", ["#000000", "#ffffff", "#d4a017"]],
+            ["ferrari", "red performance", "launch, configurator, motorsport drama", ["#ef1a2d", "#0b0b0b", "#ffd700"]],
+            ["lamborghini", "sharp exotic", "angular hero, premium product reveal", ["#d6a84f", "#101010", "#f6f0df"]]
+          ]
+        },
+        {
+          skin: "motion",
+          title: "Motion & Network Scale",
+          subtitle: "이동성, 네트워크, 대형 시스템, 미래지향형 서비스 설명.",
+          accent: "#e82127",
+          accent2: "#5b7cfa",
+          wash: "rgba(232, 33, 39, 0.1)",
+          refs: [
+            ["bmw", "premium mobility", "vehicle UX, configurator, refined catalog", ["#1c69d4", "#ffffff", "#111111"]],
+            ["renault", "electric mainstream", "mobility service, bright automotive page", ["#ffcc33", "#000000", "#ffffff"]],
+            ["tesla", "clean future", "EV, energy product, full-bleed product hero", ["#e82127", "#171a20", "#ffffff"]],
+            ["uber", "urban network", "marketplace, logistics, operations dashboard", ["#000000", "#ffffff", "#06c167"]],
+            ["spacex", "aerospace command", "mission timeline, dark technical launch", ["#000000", "#ffffff", "#8a8f98"]],
+            ["vodafone", "red telecom", "network coverage, plan comparison, comms", ["#e60000", "#ffffff", "#111111"]]
+          ]
+        },
+        {
+          skin: "media",
+          title: "Editorial & Creative Media",
+          subtitle: "강한 타이포, 이미지 중심 narrative, creative AI showcase.",
+          accent: "#ff4d00",
+          accent2: "#8b5cf6",
+          wash: "rgba(255, 77, 0, 0.11)",
+          refs: [
+            ["elevenlabs", "voice media", "audio AI, creator tool, waveform story", ["#111111", "#ffffff", "#8b5cf6"]],
+            ["minimax", "AI media lab", "model demo, creative generation, dark lab", ["#050505", "#ffffff", "#ff4d00"]],
+            ["pinterest", "visual discovery", "moodboard, image grid, collection UI", ["#e60023", "#ffffff", "#111111"]],
+            ["runwayml", "cinematic AI", "video generation, studio timeline, media deck", ["#000000", "#ffffff", "#6ee7b7"]],
+            ["theverge", "bold tech media", "news, editorial explainer, high contrast", ["#ff3d00", "#000000", "#ffffff"]],
+            ["wired", "magazine tech", "editorial report, opinionated typography", ["#000000", "#ffffff", "#ff0000"]]
+          ]
+        },
+        {
+          skin: "commerce",
+          title: "Consumer Lifestyle & Commerce",
+          subtitle: "강한 브랜드 감각이 필요한 commerce, entertainment, consumer app.",
+          accent: "#111111",
+          accent2: "#1db954",
+          wash: "rgba(17, 17, 17, 0.08)",
+          refs: [
+            ["apple", "quiet premium", "product page, hardware, refined feature story", ["#f5f5f7", "#1d1d1f", "#86868b"]],
+            ["nike", "sport energy", "campaign page, product drop, bold motion", ["#000000", "#ffffff", "#ff3b30"]],
+            ["playstation", "immersive gaming", "console, game detail, entertainment deck", ["#003791", "#ffffff", "#111111"]],
+            ["shopify", "commerce growth", "merchant dashboard, ecommerce landing", ["#95bf47", "#111111", "#ffffff"]],
+            ["spotify", "audio culture", "music app, playlist, campaign microsite", ["#1db954", "#191414", "#ffffff"]],
+            ["starbucks", "ritual commerce", "loyalty, menu, seasonal product page", ["#006241", "#f1f8f4", "#d4a373"]]
+          ]
+        },
+        {
+          skin: "ai",
+          title: "AI Labs & Model Platforms",
+          subtitle: "모델, inference, agent, research product를 설명하는 미래형 기술 톤.",
+          accent: "#6d5dfc",
+          accent2: "#00a67e",
+          wash: "rgba(109, 93, 252, 0.12)",
+          refs: [
+            ["cohere", "enterprise AI", "model platform, RAG, enterprise search", ["#39594d", "#d7ff72", "#ffffff"]],
+            ["mistral.ai", "European AI lab", "model card, API docs, research memo", ["#ff7000", "#181818", "#fff7ed"]],
+            ["ollama", "local model minimal", "local LLM, CLI, model library", ["#0b0b0b", "#ffffff", "#9ca3af"]],
+            ["replicate", "model playground", "inference gallery, prompt playground", ["#000000", "#ffffff", "#f97316"]],
+            ["together.ai", "AI infra cloud", "inference endpoints, model serving, GPU", ["#111827", "#60a5fa", "#ffffff"]],
+            ["x.ai", "stark AI frontier", "minimal black, research, model launch", ["#000000", "#ffffff", "#777777"]]
+          ]
+        },
+        {
+          skin: "enterprise",
+          title: "Enterprise & Web Platforms",
+          subtitle: "대기업, platform, web builder처럼 신뢰와 확장성이 필요한 화면.",
+          accent: "#0f62fe",
+          accent2: "#00a3a1",
+          wash: "rgba(15, 98, 254, 0.11)",
+          refs: [
+            ["expo", "app platform", "mobile dev, SDK release, app build flow", ["#000020", "#ffffff", "#4630eb"]],
+            ["ibm", "enterprise blue", "B2B report, governance, data platform", ["#0f62fe", "#ffffff", "#262626"]],
+            ["meta", "social infrastructure", "platform, network graph, product system", ["#0668e1", "#ffffff", "#1c2b33"]],
+            ["webflow", "visual web builder", "site builder, designer workflow, CMS", ["#146ef5", "#080808", "#ffffff"]]
+          ]
+        },
+        {
+          skin: "api",
+          title: "API, Reliability & Automation",
+          subtitle: "개발자 API, workflow automation, observability를 짧고 명확하게 보여주는 표면.",
+          accent: "#fb542b",
+          accent2: "#7c3aed",
+          wash: "rgba(251, 84, 43, 0.11)",
+          refs: [
+            ["composio", "agent integrations", "tool catalog, MCP, workflow automation", ["#111827", "#ffffff", "#8b5cf6"]],
+            ["resend", "developer email", "transactional email, API quickstart, logs", ["#000000", "#ffffff", "#fb542b"]],
+            ["sentry", "error observability", "issue triage, release health, alert flow", ["#362d59", "#ffffff", "#ff7a59"]]
+          ]
+        }
+      ];
+
+      const deck = document.querySelector("#deck");
+      const totalSlides = catalog.length + 3;
+
+      function swatches(colors) {
+        return `<div class="swatches">${colors.map((color) => `<i style="color:${color}"></i>`).join("")}</div>`;
+      }
+
+      function card(ref) {
+        const [slug, tone, use, colors] = ref;
+        return `
+          <article class="ref-card reveal" style="--c1:${colors[0]};--c2:${colors[1]};--c3:${colors[2]}">
+            <span class="slug">${slug}</span>
+            <strong>${tone}</strong>
+            <p>${use}</p>
+            ${swatches(colors)}
+          </article>`;
+      }
+
+      function slideNumber(index) {
+        return `<div class="slide-number">${String(index).padStart(2, "0")} / ${String(totalSlides).padStart(2, "0")}</div>`;
+      }
+
+      function genreCard(group) {
+        const dark = Boolean(group.dark);
+        return `
+          <article
+            class="genre-card reveal"
+            style="--bg:${dark ? "#050505" : "#ffffff"};--fg:${dark ? "#ffffff" : "#141413"};--soft:${dark ? "rgba(255,255,255,.65)" : "#5e5a52"};--stroke:${dark ? "rgba(255,255,255,.2)" : "rgba(18,18,17,.16)"};--accent:${group.accent};--accent2:${group.accent2};--radius:${dark ? "0" : "9px"}"
+          >
+            <strong>${group.title}</strong>
+            <span>${group.refs.length} refs · ${group.skin}</span>
+          </article>`;
+      }
+
+      function titleSlide() {
+        return `
+          <section class="slide title-hero" data-accent="#ffcc33" data-title="Title">
+            <div class="slide-content layout-title">
+              <div>
+                <div class="kicker reveal">$frontend-studio x $get-design</div>
+              <h1 class="reveal">웹 UI와 발표 자료 디자인을 고르는 레퍼런스 지도</h1>
+                <p class="lead reveal">$get-design의 71개 레퍼런스를 작업 목적별로 묶었다. 지금 만들 화면에 맞는 분위기와 밀도를 빠르게 고르는 용도다.</p>
+                <div class="hero-metrics reveal">
+                  <span>71 references</span>
+                  <span>13 visual lanes</span>
+                  <span>web UI + slide deck</span>
+                </div>
+              </div>
+              <div class="title-showcase reveal">
+                <div class="showcase-panel panel-warm"><span>guide / onboarding</span><strong>Warm Editorial</strong></div>
+                <div class="showcase-panel panel-terminal"><span>agent / runtime</span><strong>Terminal Pulse</strong></div>
+                <div class="showcase-panel panel-board"><span>workshop / review</span><strong>Collab Board</strong></div>
+                <div class="showcase-panel panel-luxury"><span>briefing / decision</span><strong>Black Briefing</strong></div>
+              </div>
+            </div>
+            ${slideNumber(1)}
+          </section>
+          <section class="slide map-slide" data-accent="#4262ff" data-title="Map">
+            <div class="slide-content">
+              <div class="kicker reveal">selection map</div>
+              <h2 class="reveal">작업별로 13개 디자인 방향을 정리했다</h2>
+              <p class="lead reveal">각 방향은 색, 배경, 글자 톤, 카드 밀도가 다르다. 다음 장부터 필요한 분위기를 훑고 바로 골라 쓰면 된다.</p>
+              <div class="genre-grid">${catalog.map(genreCard).join("")}</div>
+            </div>
+            ${slideNumber(2)}
+          </section>`;
+      }
+
+      function categorySlide(group, index) {
+        const className = ["slide", `skin-${group.skin || "warm"}`, group.dark ? "dark-slide" : ""]
+          .filter(Boolean)
+          .join(" ");
+        return `
+          <section class="${className}" data-accent="${group.accent}" data-title="${group.title}" style="--accent:${group.accent};--accent2:${group.accent2};--wash:${group.wash}">
+            <div class="skin-art" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="slide-content layout-title">
+              <div>
+                <div class="kicker reveal">concept group ${String(index - 1).padStart(2, "0")}</div>
+                <h2 class="reveal">${group.title}</h2>
+                <p class="lead reveal">${group.subtitle}</p>
+              </div>
+              <div class="category-grid">${group.refs.map(card).join("")}</div>
+            </div>
+            ${slideNumber(index)}
+          </section>`;
+      }
+
+      function chooserSlide(index) {
+        return `
+          <section class="slide" data-accent="#cc785c" data-title="Choose">
+            <div class="slide-content">
+              <div class="kicker reveal">how to choose</div>
+              <h2 class="reveal">컨셉 선택은 취향보다 작업 성격으로 고른다</h2>
+              <div class="chooser-grid reveal">
+                <div class="chooser-card"><strong>설명/교육</strong><p>Claude, Notion, Mintlify처럼 읽히는 구조를 우선한다.</p></div>
+                <div class="chooser-card"><strong>개발자 도구</strong><p>Vercel, Warp, Cursor처럼 상태와 실행감을 강조한다.</p></div>
+                <div class="chooser-card"><strong>지표/신뢰</strong><p>Stripe, IBM, Wise처럼 숫자와 안정감을 앞세운다.</p></div>
+                <div class="chooser-card"><strong>강한 인상</strong><p>Bugatti, Nike, Wired처럼 메시지를 한 문장으로 압축한다.</p></div>
+                <div class="chooser-card"><strong>협업/워크숍</strong><p>Miro, Airtable, Slack처럼 보드와 구조화를 쓴다.</p></div>
+                <div class="chooser-card"><strong>AI/인프라</strong><p>NVIDIA, Together, Supabase처럼 runtime과 capability를 보여준다.</p></div>
+                <div class="chooser-card"><strong>소비자 경험</strong><p>Apple, Spotify, Starbucks처럼 브랜드 리듬을 사용한다.</p></div>
+                <div class="chooser-card"><strong>장애/결정 보고</strong><p>Black luxury나 terminal tone으로 소음을 줄인다.</p></div>
+              </div>
+            </div>
+            ${slideNumber(index)}
+          </section>`;
+      }
+
+      deck.innerHTML = titleSlide() + catalog.map((group, i) => categorySlide(group, i + 3)).join("") + chooserSlide(totalSlides);
+
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const dots = document.querySelector(".nav-dots");
+      const progress = document.querySelector(".deck-progress span");
+      let activeIndex = 0;
+      let wheelLock = false;
+      let touchStartY = 0;
+      let scrollRaf = 0;
+
+      function goTo(index) {
+        const next = Math.max(0, Math.min(slides.length - 1, index));
+        slides[next].scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function setActive(index) {
+        activeIndex = index;
+        slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
+        dots.querySelectorAll("button").forEach((dot, i) => {
+          dot.setAttribute("aria-current", i === index ? "true" : "false");
+        });
+        document.documentElement.style.setProperty("--accent", slides[index].dataset.accent || "#cc785c");
+        progress.style.setProperty("--progress", `${((index + 1) / slides.length) * 100}%`);
+        history.replaceState(null, "", `#${index + 1}`);
+      }
+
+      function syncActiveFromScroll() {
+        scrollRaf = 0;
+        let closestIndex = activeIndex;
+        let closestDistance = Number.POSITIVE_INFINITY;
+        slides.forEach((slide, index) => {
+          const distance = Math.abs(slide.getBoundingClientRect().top);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+        if (closestIndex !== activeIndex) setActive(closestIndex);
+      }
+
+      slides.forEach((slide, index) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.setAttribute("aria-label", `${index + 1}: ${slide.dataset.title || "slide"}`);
+        dot.addEventListener("click", () => goTo(index));
+        dots.appendChild(dot);
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) setActive(slides.indexOf(entry.target));
+          });
+        },
+        { threshold: 0.62 }
+      );
+      slides.forEach((slide) => observer.observe(slide));
+
+      window.addEventListener("keydown", (event) => {
+        if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(event.key)) {
+          event.preventDefault();
+          goTo(activeIndex + 1);
+        }
+        if (["ArrowUp", "ArrowLeft", "PageUp"].includes(event.key)) {
+          event.preventDefault();
+          goTo(activeIndex - 1);
+        }
+        if (event.key === "Home") {
+          event.preventDefault();
+          goTo(0);
+        }
+        if (event.key === "End") {
+          event.preventDefault();
+          goTo(slides.length - 1);
+        }
+      });
+
+      window.addEventListener(
+        "wheel",
+        (event) => {
+          if (Math.abs(event.deltaY) < 42 || wheelLock) return;
+          wheelLock = true;
+          goTo(activeIndex + (event.deltaY > 0 ? 1 : -1));
+          setTimeout(() => {
+            wheelLock = false;
+          }, 650);
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!scrollRaf) scrollRaf = requestAnimationFrame(syncActiveFromScroll);
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "touchstart",
+        (event) => {
+          touchStartY = event.touches[0].clientY;
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "touchend",
+        (event) => {
+          const diff = touchStartY - event.changedTouches[0].clientY;
+          if (Math.abs(diff) > 46) goTo(activeIndex + (diff > 0 ? 1 : -1));
+        },
+        { passive: true }
+      );
+
+      window.addEventListener("load", () => {
+        const requested = Number.parseInt(location.hash.replace("#", ""), 10);
+        if (Number.isFinite(requested) && requested >= 1 && requested <= slides.length) {
+          setTimeout(() => goTo(requested - 1), 50);
+        } else {
+          setActive(0);
+        }
+      });
+
+      window.__deckValidate = () => {
+        const viewport = { width: window.innerWidth, height: window.innerHeight };
+        return slides.map((slide, index) => {
+          const slideRect = slide.getBoundingClientRect();
+          const offenders = Array.from(slide.querySelectorAll("*"))
+            .map((node) => {
+              const box = node.getBoundingClientRect();
+              return {
+                tag: node.tagName.toLowerCase(),
+                className: String(node.className || ""),
+                left: box.left,
+                top: box.top,
+                right: box.right,
+                bottom: box.bottom,
+                width: box.width,
+                height: box.height
+              };
+            })
+            .filter((box) => box.width > 0 && box.height > 0)
+            .filter(
+              (box) =>
+                box.left < slideRect.left - 1 ||
+                box.right > slideRect.right + 1 ||
+                box.top < slideRect.top - 1 ||
+                box.bottom > slideRect.bottom + 1
+            );
+          return {
+            index: index + 1,
+            viewport,
+            scrollHeight: slide.scrollHeight,
+            clientHeight: slide.clientHeight,
+            hasOverflow: slide.scrollHeight > slide.clientHeight + 1 || offenders.length > 0,
+            offenders: offenders.slice(0, 6)
+          };
+        });
+      };
+    </script>
+  </body>
+</html>
