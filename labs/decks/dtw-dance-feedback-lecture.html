@@ -678,6 +678,41 @@ body.show-notes .slide.visible .notes{display:block}
   <aside class="notes">두 번째는 <b>크기 맞추기</b>. 키가 다르면 손이 움직인 거리도 달라지죠. 그래서 몸통 길이를 자로 삼아 전부 나눠줘요. 그러면 '키 대비 얼마나 움직였나'로 비교돼서 어른과 아이도 공정하게 비교됩니다. 매 프레임 값이 튀지 않게 <b>영상당 한 개 값으로 고정</b>하는 게 포인트.</aside>
 </section>
 
+<!-- S18b · 정규화 ③ z축(깊이) 활용 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">20 / 45</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>정규화 ③ · 깊이</span>
+      <h2 class="reveal">z축까지 — <span class="accent">앞뒤 움직임</span>도 잡기</h2>
+      <ul class="bullets reveal">
+        <li>world는 <b>3D (x, y, z)</b> — 평면뿐 아니라 <b class="c">카메라 쪽 깊이(z)</b>까지 준다</li>
+        <li>2D만 보면 <b class="m">앞으로 지르는 펀치·상체 숙임</b>이 "짧아 보여" 사라짐</li>
+        <li>z를 쓰면 그 <b>앞뒤 동작이 깊이로 살아남</b> → 2D 투영의 한계 보완</li>
+        <li><span class="warn">단, z는 추정값이라 떨림이 큼</span> → <b class="c">confidence 높은 관절에만</b> 신뢰</li>
+      </ul>
+      <div class="callout reveal" style="margin-top:.7em"><span class="tag">원칙</span>깊이는 공짜 보너스지만 <b>믿을 만할 때만</b> — 신뢰도 낮은 z는 평면(x,y)으로 폴백</div>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 280 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="2D 한계 vs 3D 깊이">
+        <text x="65" y="15" fill="var(--dim)" font-size="10" text-anchor="middle" font-family="var(--mono)">2D 정면뷰</text>
+        <g stroke="var(--magenta)" stroke-width="2.5" fill="none"><circle cx="65" cy="48" r="7"/><line x1="65" y1="55" x2="65" y2="112"/><line x1="65" y1="68" x2="50" y2="92"/></g>
+        <circle cx="79" cy="70" r="7" fill="none" stroke="var(--magenta)" stroke-width="2.5"/>
+        <text x="65" y="138" fill="var(--magenta)" font-size="8.5" text-anchor="middle" font-family="var(--mono)">뻗은 팔이</text>
+        <text x="65" y="150" fill="var(--magenta)" font-size="8.5" text-anchor="middle" font-family="var(--mono)">짧게 뭉개짐</text>
+        <line x1="132" y1="88" x2="162" y2="88" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arz)"/>
+        <defs><marker id="arz" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--muted)"/></marker><marker id="arzc" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--cyan)"/></marker></defs>
+        <text x="215" y="15" fill="var(--cyan)" font-size="10" text-anchor="middle" font-family="var(--mono)">위에서 본 3D</text>
+        <circle cx="188" cy="85" r="7" fill="none" stroke="var(--cyan)" stroke-width="2.5"/>
+        <line x1="195" y1="85" x2="250" y2="85" stroke="var(--cyan)" stroke-width="2.5" marker-end="url(#arzc)"/>
+        <text x="222" y="106" fill="var(--cyan)" font-size="9" text-anchor="middle" font-family="var(--mono)">z(깊이)로 뻗음</text>
+      </svg>
+      <p class="cap">정면 2D엔 안 보이는 '앞으로 뻗음'을 z가 잡는다</p>
+    </div>
+  </div>
+  <aside class="notes">world는 3D예요. 평면(x,y)뿐 아니라 카메라 쪽 깊이(z)까지 줍니다. 펀치를 카메라 쪽으로 지르거나 상체를 앞으로 숙이면, 2D 정면에선 팔이 짧아 보여서 동작이 사라져요. z를 쓰면 그 앞뒤 움직임이 깊이로 살아남죠. 다만 z는 추정값이라 떨림이 커서, <b>신뢰도(confidence) 높은 관절에서만</b> 믿고 쓰는 게 안전해요. 못 믿을 z는 평면으로 돌아가면 됩니다.</aside>
+</section>
+
 <!-- S19 · 운동학 지표 개요 -->
 <section class="slide">
   <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">19 / 42</span></div>
@@ -806,11 +841,13 @@ body.show-notes .slide.visible .notes{display:block}
     </div>
     <div class="reveal center">
       <svg class="dia" viewBox="0 0 260 170" style="max-width:min(38vw,300px);margin:0 auto" aria-label="그루브 상관">
-        <path fill="none" stroke="var(--cyan)" stroke-width="2.5" d="M10,85 Q45,25 80,85 Q115,140 150,85 Q185,30 220,85 L250,85"/>
-        <path fill="none" stroke="var(--magenta)" stroke-width="2.5" stroke-dasharray="1 0" opacity=".9" d="M10,95 Q45,45 80,95 Q115,135 150,95 Q185,48 220,95 L250,95"/>
-        <text x="130" y="162" fill="var(--lime)" font-size="11" text-anchor="middle" font-family="var(--mono)">산·골이 같은 자리 → 상관 ≈ 1</text>
+        <path fill="none" stroke="var(--cyan)" stroke-width="2.5" d="M10,85 Q45,18 80,85 Q115,152 150,85 Q185,18 220,85 L250,85"/>
+        <path fill="none" stroke="var(--magenta)" stroke-width="2.5" opacity=".9" d="M10,85 Q45,60 80,85 Q115,110 150,85 Q185,60 220,85 L250,85"/>
+        <text x="246" y="34" fill="var(--cyan)" font-size="9" font-family="var(--mono)">정답(큼)</text>
+        <text x="246" y="78" fill="var(--magenta)" font-size="9" font-family="var(--mono)">학생(작음)</text>
+        <text x="130" y="168" fill="var(--lime)" font-size="10" text-anchor="middle" font-family="var(--mono)">진폭 달라도 산·골 위치 같으면 → 상관 ≈ 1</text>
       </svg>
-      <p class="cap">두 속도 곡선의 위상 일치</p>
+      <p class="cap">크기(진폭)는 무시, <b>패턴(위상)만</b> 본다</p>
     </div>
   </div>
   <aside class="notes">그루브는 <b>'박자 위에 올라탔나'</b>예요. 빠를 때 같이 빠르고 느릴 때 같이 느리면 그루브가 맞는 거죠. 속도 곡선 두 개를 겹쳐서 산과 골이 같은 자리에 있는지를 상관계수로 봅니다. 세기는 파워가 보니까, <b>그루브는 타이밍만</b> 봐요. 역할을 나눈 거예요.</aside>
@@ -1027,6 +1064,7 @@ w = <span class="fn">min</span>(ref_conf, tgt_conf)</div>
         <li>극단적 휨 차단 + <b class="c">계산량 O(n·r)로 감소</b></li>
         <li>주의: r이 너무 좁으면 정상 속도 차이도 못 흡수 → 튜닝</li>
       </ul>
+      <div class="callout reveal" style="margin-top:.7em"><span class="tag">세팅</span>시작 <b class="c">r ≈ 1초</b> (30fps→30·8fps→8프레임). <b>빠른 안무·초보자일수록 넓게</b> (지연 가능성↑).</div>
     </div>
     <div class="reveal center">
       <svg class="dia" viewBox="0 0 200 200" style="max-width:min(34vw,250px);margin:0 auto" aria-label="Sakoe-Chiba band">
@@ -1054,7 +1092,9 @@ w = <span class="fn">min</span>(ref_conf, tgt_conf)</div>
         <li>대각선은 싸고 옆걸음은 비싸게 → 경로가 <b class="c">대각선 선호</b></li>
         <li>step pattern 조정으로 과한 휨 억제</li>
       </ul>
-      <div class="callout reveal" style="margin-top:.8em"><span class="tag">RESULT</span>"싼 길" 아니라 <b>"싸고 자연스러운 길"</b> → 매끈한 정렬</div>
+      <div class="formula reveal" style="margin-top:.6em;font-size:clamp(.6rem,1.2vw,.84rem)">γ = d + min( γ<span class="c">↘</span> , γ<span class="m">→</span>+P , γ<span class="m">↑</span>+P )</div>
+      <p class="gloss reveal">대각선엔 +0, <b>옆·위 이동에만 상수 P</b>를 더한다 (P는 거리 d와 비슷한 스케일에서 튜닝)</p>
+      <div class="callout reveal" style="margin-top:.55em"><span class="tag">RESULT</span>"싼 길" 아니라 <b>"싸고 자연스러운 길"</b> → 매끈한 정렬</div>
     </div>
     <div class="reveal center">
       <svg class="dia" viewBox="0 0 200 180" style="max-width:min(34vw,250px);margin:0 auto" aria-label="가중치">
@@ -1077,19 +1117,18 @@ w = <span class="fn">min</span>(ref_conf, tgt_conf)</div>
 <section class="slide">
   <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 개선 ②-c</span><span class="pg">34 / 42</span></div>
   <div class="slide-content">
-    <span class="eyebrow reveal"><span class="dot"></span>개선 ②-c · 고급</span>
+    <span class="eyebrow reveal"><span class="dot"></span>개선 ②-c · 고급 (선택)</span>
     <h2 class="reveal">Asymmetric DTW — <span class="accent">학생 기준</span> 정렬</h2>
-    <p class="body reveal" style="margin:.2em 0 .6em">학생의 <b>모든 프레임을 한 번씩</b> 채점(균등), 정답은 일부 skip 허용.</p>
+    <p class="body reveal" style="margin:.2em 0 .55em">비유: <b class="c">학생 발걸음을 1·2·3·4로 고정</b>하고 정답을 거기에 맞춘다. → 학생의 <b>모든 순간이 딱 한 번씩</b> 채점돼서 공정. (표준은 둘 다 늘여서 짝이 들쭉날쭉)</p>
     <div class="reveal t-wrap">
       <table>
-        <tr><th>측면</th><th>표준 (대칭)</th><th>Asymmetric</th></tr>
-        <tr><td>채점 단위</td><td>경로 쌍(불균등)</td><td><span class="good">학생 프레임(균등) ✅</span></td></tr>
-        <tr><td>군더더기 동작</td><td>잘 잡음</td><td>잘 잡음</td></tr>
-        <tr><td><b>동작 누락</b></td><td><span class="good">잘 잡음 ✅</span></td><td><span class="bad">못 잡음 ⚠️</span></td></tr>
-        <tr><td>자세 오차</td><td>보수적</td><td><span class="warn">band 좁아야 신뢰</span></td></tr>
+        <tr><th>측면</th><th>표준 (대칭)</th><th>Asymmetric (학생 기준)</th></tr>
+        <tr><td>누가 시간을 늘이나</td><td>정답·학생 <b>둘 다</b></td><td><span class="good">학생 고정, 정답만 조정</span></td></tr>
+        <tr><td>채점 가중</td><td>짝 수 따라 들쭉날쭉</td><td><span class="good">학생 프레임당 1번 (공정) ✅</span></td></tr>
+        <tr><td><b>동작 누락 감지</b></td><td><span class="good">잘 잡음 ✅</span></td><td><span class="bad">못 잡음 ⚠️ (정답 skip 가능)</span></td></tr>
       </table>
     </div>
-    <div class="callout warn reveal" style="margin-top:.7em"><span class="tag">적용 판단</span>같은 안무·비슷한 길이·시작끝 정렬 전제면 이점 큼. <b>누락 평가가 중요하면 주의.</b></div>
+    <div class="callout warn reveal" style="margin-top:.7em"><span class="tag">트레이드오프</span><b>공정한 채점</b>(asym) ↔ <b>빼먹은 동작 감지</b>(표준). 같은 안무를 끝까지 췄다는 전제면 asym, <b class="m">누락 평가가 중요하면 표준</b>이 안전.</div>
   </div>
   <aside class="notes">세 번째는 좀 고급이에요. '학생 프레임을 기준으로 한 번씩 공정하게 채점하자'는 거죠. 대신 정답 쪽 일부를 건너뛸 수 있어서, <b>학생이 안무를 통째로 빼먹어도 못 잡는 약점</b>이 생겨요. 그래서 '같은 춤을 끝까지 따라 췄다'가 전제일 때만 써야 해요. 만능이 아니라 <b>트레이드오프</b>가 있다는 걸 아는 게 중요합니다.</aside>
 </section>
@@ -1131,21 +1170,25 @@ w = <span class="fn">min</span>(ref_conf, tgt_conf)</div>
     <div>
       <span class="eyebrow m reveal"><span class="dot"></span>함정 ④</span>
       <h2 class="reveal">lag 평균 평행이동의 <span class="accent m">거짓말</span></h2>
+      <p class="body reveal" style="margin:.1em 0 .5em"><b>클립</b> = 피드백 끝에 보여주는 <b class="c">'정답 vs 학생 나란히 재생' 비교 영상</b>.</p>
       <ul class="bullets reveal">
-        <li>타이밍 클립이 <b>평균 lag 하나</b>로 영상 전체를 통째로 이동</li>
-        <li>"처음엔 맞다 중간에 늦는" <b class="m">국소 변화가 평균에 묻혀</b> 사라짐</li>
-        <li>개선: 평균이 아니라 <b class="c">경로 따라 프레임별 동적 오프셋</b> + 선형 보간</li>
+        <li>DTW는 이미 <b class="c">프레임별로</b> 어긋남을 다 안다(경로) — <span class="dim">정렬은 잘 됨</span></li>
+        <li>그런데 클립 만들 때 그걸 버리고 <b class="m">평균 lag 하나</b>로 영상 전체를 통째로 민다</li>
+        <li>"앞은 맞고 뒤는 늦음" → 평균으로 밀면 <b class="m">앞뒤 다 어긋나 보임</b> (진짜 문제를 가림)</li>
+        <li>개선: <b class="c">경로 따라 프레임별</b>로 — 잘 맞는 곳은 조금, 틀어진 곳은 많이</li>
       </ul>
     </div>
-    <div class="reveal">
-      <div class="code"><span class="c"># ❌ 평균 lag 하나로 평행이동</span>
-offset = <span class="fn">round</span>(<span class="fn">mean</span>(lags))
-<span class="c"># → 중간 어긋남이 사라져 거짓 시각화</span>
-
-<span class="c"># ✅ 경로 따라 프레임별 동적 오프셋</span>
-<span class="k">for</span> (ref_i, tgt_j) <span class="k">in</span> <span class="fn">path</span>:
-    <span class="fn">render</span>(ref_i, tgt_j)  <span class="c"># +선형보간</span></div>
-      <p class="cap" style="text-align:left;margin-top:.5em">동작 클립은 평균도 OK · 타이밍 클립은 경로 필수</p>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 260 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="평균 vs 경로 lag">
+        <line x1="22" y1="20" x2="22" y2="150" stroke="var(--line)"/><line x1="22" y1="150" x2="248" y2="150" stroke="var(--line)"/>
+        <text x="16" y="30" fill="var(--dim)" font-size="9" text-anchor="end" font-family="var(--mono)">늦음</text>
+        <text x="135" y="172" fill="var(--dim)" font-size="9" text-anchor="middle" font-family="var(--mono)">시간 →</text>
+        <path fill="none" stroke="var(--cyan)" stroke-width="2.8" d="M22,135 L120,135 L142,52 L248,52"/>
+        <text x="120" y="44" fill="var(--cyan)" font-size="9" font-family="var(--mono)">실제(경로): 뒤에서 늦어짐</text>
+        <line x1="22" y1="93" x2="248" y2="93" stroke="var(--magenta)" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="120" y="112" fill="var(--magenta)" font-size="9" font-family="var(--mono)">평균(거짓): 밋밋</text>
+      </svg>
+      <p class="cap">평균은 '언제 틀어졌나'를 가린다</p>
     </div>
   </div>
   <aside class="notes">네 번째. 타이밍 클립을 만들 때 평균 한 값으로 영상을 통째로 밀어요. 그러면 중간에 늦었다 빨랐다 하는 게 평균에 묻혀서, <b>클립에선 박자가 맞는 것처럼 보여요. 거짓말하는 클립</b>이죠. DTW 경로는 프레임마다 '몇 칸 어긋났는지'를 다 알고 있으니, 그걸 그대로 쓰면 실제 어긋남이 눈에 보입니다.</aside>
@@ -1202,6 +1245,23 @@ offset = <span class="fn">round</span>(<span class="fn">mean</span>(lags))
   <aside class="notes">다 중요하지만 순서가 있어요. <b>visibility 필터링이랑 경로/거리 점검은 품이 적게 들면서 효과가 커요.</b> 이걸 먼저 하고, 그다음 penalty DTW랑 그루브/파워 재정의 같은 구조적인 걸 하는 게 좋아요. '싸고 효과 큰 것부터'가 원칙입니다.</aside>
 </section>
 
+<!-- S38b · fps 고도화 전략 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 고도화</span><span class="pg">40 / 45</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>고도화 · 입력 해상도</span>
+    <h2 class="reveal">fps 전략 — <span class="accent">용도별로 다르게</span></h2>
+    <p class="body reveal" style="margin:.2em 0 .7em">30fps를 전부 쓸 필요는 없다 — <b>무엇을 재느냐</b>에 따라 해상도를 나눈다.</p>
+    <div class="grid-2 reveal">
+      <div class="card cyan"><h3>🎯 정렬 · 타이밍 · 자세</h3><p><b>저fps (10~15)</b> — confidence 게이팅·스무딩 후 다운샘플. 노이즈↓, 경로 안정, 계산도 빠름.</p></div>
+      <div class="card"><h3>💥 세기 · 스냅 · 그루브</h3><p><b>원본 고fps (30)</b> — 저fps면 '딱 끊는 순간(스냅)'이 프레임 사이에 묻혀 파워 점수가 부정확.</p></div>
+    </div>
+    <div class="formula reveal" style="margin-top:.7em;font-size:clamp(.62rem,1.25vw,.9rem)">confidence 게이팅 → 스무딩 → 다운샘플 → DTW</div>
+    <div class="callout warn reveal" style="margin-top:.6em"><span class="tag">주의</span>8fps는 스냅을 놓침 → <b class="c">10~15fps부터</b> 실험. 30/15/10/8 직접 비교해 점수 안정성으로 정할 것.</div>
+  </div>
+  <aside class="notes">30프레임을 다 쓸 필요는 없어요. 정렬·타이밍·자세는 노이즈가 적은 게 좋으니, 신뢰도를 거른 다음 10~15fps로 줄이면 더 안정적이고 빨라요. 반대로 세기·스냅은 '딱 끊는 순간'이 고프레임에 있으니 원본 30fps에서 재야 해요. 8fps는 너무 줄여서 스냅을 놓치니 10~15부터 실험하고, 여러 fps로 직접 돌려서 점수가 가장 안정적인 값으로 정하세요. 한쪽 fps로 통일하지 말고 용도별로 나누는 게 핵심이에요.</aside>
+</section>
+
 <!-- S39 · 검증 문화 -->
 <section class="slide">
   <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 검증</span><span class="pg">39 / 42</span></div>
@@ -1237,7 +1297,7 @@ offset = <span class="fn">round</span>(<span class="fn">mean</span>(lags))
       <li><b class="c">2</b>&nbsp;&nbsp;⭐ <b>경로 = 타이밍 / 거리 = 자세</b> — 절대 섞지 말 것</li>
       <li><b class="c">3</b>&nbsp;&nbsp;좌표를 <b>정규화 → 운동학 지표</b>로 바꿔 '의미'를 비교 (각도·속도·저크)</li>
       <li><b class="c">4</b>&nbsp;&nbsp;<b class="m">전처리(visibility)가 전부</b> — 더러운 입력은 모든 점수를 오염</li>
-      <li><b class="c">5</b>&nbsp;&nbsp;<b>표준 DTW는 함정</b> — band·weight로 자연스러운 경로를, 클립은 경로 기반으로</li>
+      <li><b class="c">5</b>&nbsp;&nbsp;<b>표준 DTW는 함정</b> — band·weight로 자연스러운 경로를, <b>클립(비교영상)</b>은 경로 기반으로</li>
     </ul>
   </div>
   <aside class="notes">딱 다섯 개만 가져가세요. DTW는 시간 정렬, 경로와 거리는 다른 신호, 좌표는 의미로 바꿔 비교, 입력 위생이 제일 중요, 표준 DTW는 그냥 쓰면 위험. <b>이 다섯이 오늘의 전부</b>예요.</aside>
