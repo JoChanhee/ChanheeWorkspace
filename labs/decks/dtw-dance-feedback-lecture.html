@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DTW로 춤을 읽다 — SHOEOUT 댄스 피드백의 심장</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   THEME — NEON STAGE (잉크블랙 무대 + 시안·마젠타 듀얼 네온)
+   색/폰트만 바꾸면 전체 룩이 바뀐다.
+   ========================================================= */
+:root{
+  --bg:#08080c; --bg2:#0e0e16; --surface:rgba(255,255,255,.04); --surface2:#13131c;
+  --text:#f2f2f7; --muted:#9a9aae; --dim:#5e5e70; --line:rgba(255,255,255,.09);
+  --cyan:#22d3ee; --magenta:#ff2d95; --lime:#a3e635; --amber:#ffb020;
+  --cyan-glow:rgba(34,211,238,.45); --magenta-glow:rgba(255,45,149,.45);
+  --kr:'Pretendard',sans-serif; --display:'Sora',sans-serif; --mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(.16,1,.3,1); --dur:.7s;
+  --title-size:clamp(2rem,6vw,4.6rem); --h2-size:clamp(1.4rem,3.6vw,2.6rem);
+  --lead-size:clamp(.95rem,2vw,1.45rem); --body-size:clamp(.82rem,1.5vw,1.08rem);
+  --small:clamp(.68rem,1.2vw,.86rem);
+  --pad:clamp(1.5rem,4.5vw,4.5rem);
+}
+/* ---- viewport-base.css (필수 뷰포트 규칙) ---- */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow-x:hidden}
+html{scroll-snap-type:y mandatory;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--kr)}
+.slide{width:100vw;height:100vh;height:100dvh;overflow:hidden;scroll-snap-align:start;
+  display:flex;flex-direction:column;position:relative}
+.slide-content{flex:1;display:flex;flex-direction:column;justify-content:center;
+  max-height:100%;overflow:hidden;padding:var(--pad)}
+img,svg.dia{max-width:100%;max-height:min(56vh,440px)}
+@media(max-height:700px){:root{--pad:clamp(1rem,3vw,2.4rem);--title-size:clamp(1.6rem,5vw,3rem);--h2-size:clamp(1.2rem,3vw,2rem)}}
+@media(max-height:600px){:root{--pad:clamp(.7rem,2.5vw,1.6rem);--body-size:clamp(.74rem,1.2vw,.95rem)}.nav-dots,.kbd-hint{display:none}}
+@media(max-width:680px){:root{--title-size:clamp(1.6rem,8vw,2.6rem)}.grid-2,.grid-3{grid-template-columns:1fr!important}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.2s!important}html{scroll-behavior:auto}}
+
+/* =========================================================
+   BACKGROUND — 모든 슬라이드 은은한 네온 글로우 + 그레인
+   ========================================================= */
+.slide{background:
+  radial-gradient(50vw 40vh at 12% 16%, rgba(34,211,238,.08), transparent 60%),
+  radial-gradient(46vw 38vh at 88% 86%, rgba(255,45,149,.08), transparent 60%),
+  var(--bg);}
+.slide.hero{background:
+  radial-gradient(60vw 52vh at 18% 22%, rgba(34,211,238,.18), transparent 60%),
+  radial-gradient(56vw 46vh at 84% 80%, rgba(255,45,149,.18), transparent 60%),
+  var(--bg);}
+.slide::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.045;mix-blend-mode:overlay;z-index:1;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.slide-content,.topbar,.notes{position:relative;z-index:2}
+
+/* =========================================================
+   TOPBAR — 파트 표시 + 페이지 번호
+   ========================================================= */
+.topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+  padding:clamp(1rem,2.5vw,1.8rem) var(--pad);font-family:var(--mono);font-size:var(--small);letter-spacing:.04em}
+.topbar .part{color:var(--cyan)} .topbar .part b{color:var(--text);font-weight:700}
+.topbar .pg{color:var(--dim)}
+
+/* =========================================================
+   TYPOGRAPHY & COMPONENTS
+   ========================================================= */
+h1{font-family:var(--display);font-weight:800;font-size:var(--title-size);line-height:.98;letter-spacing:-.02em}
+h2{font-family:var(--kr);font-weight:800;font-size:var(--h2-size);line-height:1.08;letter-spacing:-.01em;margin-bottom:.5em}
+h2 .accent{color:var(--cyan)} h2 .accent.m{color:var(--magenta)}
+.grad{background:linear-gradient(100deg,var(--cyan),var(--magenta));-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{display:inline-flex;align-items:center;gap:.6em;align-self:flex-start;font-family:var(--display);font-weight:600;
+  font-size:var(--small);letter-spacing:.05em;color:var(--cyan);padding:.55em 1em;border-radius:999px;
+  background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.32);margin-bottom:1.1em}
+.eyebrow .dot{width:.5em;height:.5em;border-radius:50%;background:var(--magenta);box-shadow:0 0 10px var(--magenta)}
+.eyebrow.m{color:var(--magenta);background:rgba(255,45,149,.08);border-color:rgba(255,45,149,.32)}
+.eyebrow.m .dot{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.lead{font-size:var(--lead-size);line-height:1.5;color:var(--muted);max-width:46ch}
+.lead b{color:var(--text);font-weight:700}
+p.body{font-size:var(--body-size);line-height:1.6;color:var(--muted);max-width:60ch}
+p.body b{color:var(--text)}
+.bullets{list-style:none;display:flex;flex-direction:column;gap:clamp(.5rem,1.4vh,1rem);margin-top:.4em}
+.bullets li{position:relative;padding-left:1.6em;font-size:var(--body-size);line-height:1.5;color:var(--muted);max-width:62ch}
+.bullets li::before{content:"";position:absolute;left:0;top:.62em;width:.85em;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--magenta))}
+.bullets li b{color:var(--text)} .bullets li .c{color:var(--cyan)} .bullets li .m{color:var(--magenta)}
+.kbd{font-family:var(--mono);font-size:.85em;background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:.1em .45em;color:var(--cyan)}
+
+/* layouts */
+.two-col{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(1.2rem,3.5vw,3.4rem);align-items:center}
+.two-col.wide-r{grid-template-columns:.9fr 1.1fr}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(.7rem,1.8vw,1.3rem)}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(.7rem,1.6vw,1.2rem)}
+.center{align-items:center;text-align:center}
+.center .lead,.center p.body{margin-left:auto;margin-right:auto}
+.center .eyebrow{align-self:center}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(.9rem,2vw,1.5rem);backdrop-filter:blur(8px)}
+.card h3{font-family:var(--display);font-weight:700;font-size:clamp(.95rem,1.8vw,1.25rem);margin-bottom:.4em;color:var(--text)}
+.card p{font-size:var(--body-size);line-height:1.5;color:var(--muted)}
+.card .ico{font-size:clamp(1.3rem,2.6vw,1.9rem);margin-bottom:.3em;display:block}
+.card.cyan{border-color:rgba(34,211,238,.35);box-shadow:0 0 30px rgba(34,211,238,.07) inset}
+.card.mag{border-color:rgba(255,45,149,.35);box-shadow:0 0 30px rgba(255,45,149,.07) inset}
+
+/* callouts */
+.callout{border-left:3px solid var(--cyan);background:rgba(34,211,238,.06);border-radius:0 12px 12px 0;
+  padding:clamp(.8rem,1.8vw,1.2rem) clamp(1rem,2vw,1.5rem);font-size:var(--body-size);line-height:1.55;color:var(--text)}
+.callout.warn{border-left-color:var(--magenta);background:rgba(255,45,149,.07)}
+.callout .tag{font-family:var(--mono);font-size:.8em;color:var(--cyan);display:block;margin-bottom:.3em;letter-spacing:.04em}
+.callout.warn .tag{color:var(--magenta)}
+.callout b{font-weight:700}
+
+/* formula */
+.formula{font-family:var(--mono);font-size:clamp(.9rem,2.1vw,1.5rem);color:var(--text);text-align:center;
+  background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:clamp(.9rem,2.4vw,1.6rem);
+  box-shadow:0 0 40px rgba(34,211,238,.06)}
+.formula .c{color:var(--cyan)} .formula .m{color:var(--magenta)} .formula .dim{color:var(--dim)}
+.gloss{font-size:var(--small);color:var(--cyan);font-family:var(--mono);margin-top:.7em;text-align:center}
+.gloss::before{content:"↳ ";color:var(--dim)}
+
+/* code */
+.code{font-family:var(--mono);font-size:clamp(.7rem,1.35vw,.95rem);line-height:1.65;background:#0b0b12;
+  border:1px solid var(--line);border-radius:12px;padding:clamp(.9rem,2vw,1.4rem);overflow:hidden;color:#c8c8d4}
+.code .k{color:var(--magenta)} .code .fn{color:var(--cyan)} .code .n{color:var(--amber)} .code .s{color:var(--lime)} .code .c{color:var(--dim);font-style:italic}
+.code .hl{background:rgba(255,45,149,.12);display:inline-block;width:100%;border-radius:3px}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:var(--small)}
+th,td{text-align:left;padding:clamp(.45rem,1.1vw,.8rem) clamp(.5rem,1.2vw,1rem);border-bottom:1px solid var(--line)}
+th{font-family:var(--display);font-weight:700;color:var(--cyan);font-size:.92em;letter-spacing:.02em}
+td{color:var(--muted)} td b,td .ok{color:var(--text)} td .good{color:var(--lime)} td .bad{color:var(--magenta)} td .warn{color:var(--amber)}
+tr:last-child td{border-bottom:none}
+.t-wrap{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+
+/* stat / kpi */
+.stat{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,7vw,5rem);line-height:1;letter-spacing:-.03em}
+.stat.c{color:var(--cyan)} .stat.m{color:var(--magenta)}
+.bignum{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,4vw,3rem);color:var(--magenta);line-height:1}
+
+/* diagram helpers */
+svg.dia{display:block;width:100%;height:auto;overflow:visible}
+.dia .ref{stroke:var(--cyan)} .dia .tgt{stroke:var(--magenta)}
+.cap{font-family:var(--mono);font-size:var(--small);color:var(--dim);text-align:center;margin-top:.7em}
+.tag-pill{font-family:var(--mono);font-size:var(--small);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:.4em .8em;display:inline-block}
+
+/* hero waveform / pagenum */
+.wave-hero svg{width:100%;height:clamp(60px,11vh,110px)}
+.wave-hero .link line{animation:flick 2.6s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:.15}50%{opacity:.6}}
+
+/* =========================================================
+   REVEAL ANIMATIONS (Intersection Observer가 .visible 부여)
+   ========================================================= */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+.slide.visible .reveal{opacity:1;transform:none}
+.slide.visible .reveal:nth-child(1){transition-delay:.05s}
+.slide.visible .reveal:nth-child(2){transition-delay:.15s}
+.slide.visible .reveal:nth-child(3){transition-delay:.25s}
+.slide.visible .reveal:nth-child(4){transition-delay:.35s}
+.slide.visible .reveal:nth-child(5){transition-delay:.45s}
+.slide.visible .reveal:nth-child(6){transition-delay:.55s}
+.r-d1{transition-delay:.1s!important}.r-d2{transition-delay:.25s!important}.r-d3{transition-delay:.4s!important}.r-d4{transition-delay:.55s!important}.r-d5{transition-delay:.7s!important}
+.draw{stroke-dasharray:var(--len,600);stroke-dashoffset:var(--len,600)}
+.slide.visible .draw{animation:draw 1.8s .5s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* =========================================================
+   CHROME — progress bar, nav dots, hints, speaker notes
+   ========================================================= */
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:100;
+  background:linear-gradient(90deg,var(--cyan),var(--magenta));box-shadow:0 0 12px var(--cyan-glow);transition:width .25s ease}
+.nav-dots{position:fixed;right:clamp(.7rem,1.6vw,1.4rem);top:50%;transform:translateY(-50%);z-index:100;
+  display:flex;flex-direction:column;gap:6px}
+.nav-dots button{width:7px;height:7px;border-radius:50%;border:none;background:rgba(255,255,255,.2);cursor:pointer;padding:0;transition:all .25s ease}
+.nav-dots button:hover{background:rgba(255,255,255,.5)}
+.nav-dots button.active{background:var(--cyan);box-shadow:0 0 8px var(--cyan);transform:scale(1.5)}
+.kbd-hint{position:fixed;left:50%;bottom:clamp(.7rem,2vh,1.4rem);transform:translateX(-50%);z-index:100;
+  font-family:var(--mono);font-size:clamp(.6rem,1vw,.74rem);color:var(--dim);background:rgba(8,8,12,.7);
+  border:1px solid var(--line);border-radius:999px;padding:.4em 1em;backdrop-filter:blur(8px);transition:opacity .4s}
+.notes{position:absolute;left:0;right:0;bottom:0;z-index:40;display:none;
+  background:rgba(8,8,12,.95);border-top:2px solid var(--magenta);backdrop-filter:blur(10px);
+  padding:clamp(.8rem,2vw,1.3rem) var(--pad);font-size:clamp(.72rem,1.35vw,.95rem);line-height:1.55;color:var(--muted);max-height:34vh;overflow:auto}
+.notes::before{content:"🎤 발표자 노트";display:block;font-family:var(--mono);font-size:.8em;color:var(--magenta);margin-bottom:.4em;letter-spacing:.04em}
+.notes b{color:var(--text)}
+body.show-notes .slide.visible .notes{display:block}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav-dots" id="navDots" aria-label="슬라이드 내비게이션"></nav>
+<div class="kbd-hint" id="kbdHint">← → 이동 · N 발표자 노트 · F 전체화면</div>
+
+<!-- ============================ PART 0 — 오프닝 ============================ -->
+
+<!-- S1 · 표지 -->
+<section class="slide hero">
+  <div class="slide-content center">
+    <span class="eyebrow reveal"><span class="dot"></span>SHOEOUT · 댄스 피드백 강의</span>
+    <h1 class="reveal">DTW로 춤을 <span class="grad">읽다.</span></h1>
+    <p class="lead reveal" style="margin-top:.6em">두 춤의 시간을 맞추는 법 — <b>Dynamic Time Warping</b></p>
+    <div class="wave-hero reveal" style="max-width:min(90vw,720px);margin-top:clamp(1rem,3vh,2.2rem)" aria-hidden="true">
+      <svg class="dia" viewBox="0 0 720 110" preserveAspectRatio="none">
+        <path class="ref" fill="none" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 6px var(--cyan-glow))" d="M0,28 Q56,2 112,28 T224,28 Q280,5 336,28 T448,28 Q504,3 560,28 T672,28 L720,28"/>
+        <path class="tgt" fill="none" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 6px var(--magenta-glow))" d="M0,84 Q66,108 132,84 T264,84 Q314,106 360,84 T492,84 Q548,108 604,84 T720,84"/>
+        <g class="link" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="3 4">
+          <line x1="56" y1="14" x2="76" y2="98"/><line x1="170" y1="14" x2="198" y2="98"/><line x1="290" y1="15" x2="330" y2="98"/><line x1="420" y1="14" x2="450" y2="98"/><line x1="560" y1="14" x2="600" y2="98"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <aside class="notes">오늘은 우리 서비스의 심장인 DTW를 처음부터 끝까지 뜯어봅니다. 이미 코드로 만들어봤지만 <b>'왜 이렇게 동작하는지'</b>를 알면 피드백 품질을 한 단계 끌어올릴 수 있어요. 이론 → 댄스 적용 → 우리 코드의 함정 순서로 갑니다.</aside>
+</section>
+
+<!-- S2 · 도입 질문 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 0</b> · 오프닝</span><span class="pg">02 / 42</span></div>
+  <div class="slide-content center">
+    <h2 class="reveal" style="font-size:clamp(1.8rem,4.5vw,3.2rem)">우리 피드백, <span class="accent">정말 믿을 수 있을까?</span></h2>
+    <div class="grid-3 reveal" style="margin-top:clamp(1rem,3vh,2rem);width:min(96vw,1000px)">
+      <div class="card cyan"><span class="ico">🔁</span><p>같은 영상을 두 번 넣으면 <b>같은 점수</b>가 나올까?</p></div>
+      <div class="card mag"><span class="ico">⏱️</span><p>"타이밍이 틀렸다"는 피드백, 진짜 <b>타이밍</b> 문제일까 <b>자세</b> 문제일까?</p></div>
+      <div class="card cyan"><span class="ico">🎬</span><p>비교 영상 속 박자, <b>실제로 맞는</b> 걸까?</p></div>
+    </div>
+    <p class="lead reveal" style="margin-top:clamp(1rem,3vh,1.8rem)">→ 이 질문들의 답은 전부 <b>DTW를 제대로 쓰느냐</b>에 달려 있다.</p>
+  </div>
+  <aside class="notes">지금 우리 시스템에 이 세 질문을 던지면 자신 있게 '네'라고 답할 수 있나요? 오늘 강의가 끝나면 <b>어디를 고쳐야</b> 이 질문들에 '네'라고 답할 수 있는지 정확히 알게 됩니다.</aside>
+</section>
+
+<!-- S3 · 오늘의 여정 + 파이프라인 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 0</b> · 오프닝</span><span class="pg">03 / 42</span></div>
+  <div class="slide-content">
+    <h2 class="reveal">오늘의 여정</h2>
+    <div class="grid-2 reveal" style="margin:.3em 0 clamp(1rem,3vh,1.8rem)">
+      <ul class="bullets">
+        <li><b class="c">Part 1</b> · DTW 기초 이론 — 두 춤의 시간을 맞추는 법</li>
+        <li><b class="c">Part 2</b> · 댄스 특화 피드백 — 좌표가 피드백이 되기까지</li>
+      </ul>
+      <ul class="bullets">
+        <li><b class="m">Part 3</b> · 현 구현의 함정과 개선 — 악마는 디테일에</li>
+        <li><b>Part 4</b> · 정리 &amp; 액션 아이템</li>
+      </ul>
+    </div>
+    <p class="cap reveal" style="text-align:left;margin-bottom:.5em">우리가 이미 만든 파이프라인 — 오늘의 출발점이자 도착점</p>
+    <div class="reveal" style="overflow-x:auto">
+      <div style="display:flex;align-items:stretch;gap:.4rem;min-width:min-content;font-family:var(--mono);font-size:clamp(.6rem,1.15vw,.82rem)">
+        <span class="flow">포즈 추출</span><span class="arr">→</span>
+        <span class="flow">정규화</span><span class="arr">→</span>
+        <span class="flow">운동학 지표</span><span class="arr">→</span>
+        <span class="flow">미러 판정</span><span class="arr">→</span>
+        <span class="flow">여백 트림</span><span class="arr">→</span>
+        <span class="flow hot">DTW</span><span class="arr">→</span>
+        <span class="flow">5종 점수</span>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">아래 흐름도가 우리가 만든 거예요. 오늘 이 박스 하나하나를 다시 들여다보면서, 특히 <b>'DTW' 박스와 그 앞뒤</b>를 깊게 팝니다. 끝에는 각 박스에 '이건 이렇게 고치자'는 메모가 붙습니다.</aside>
+</section>
+<style>
+.flow{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:.7em 1em;white-space:nowrap;color:var(--muted);display:flex;align-items:center}
+.flow.hot{border-color:var(--magenta);color:var(--text);box-shadow:0 0 24px rgba(255,45,149,.18);background:rgba(255,45,149,.08)}
+.arr{display:flex;align-items:center;color:var(--dim)}
+</style>
+
+<!-- ============================ PART 1 — DTW 기초 이론 ============================ -->
+
+<!-- S4 · 문제 제기: 같은 춤 다른 속도 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">04 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>문제 제기</span>
+      <h2 class="reveal">같은 춤, <span class="accent m">다른 속도</span></h2>
+      <ul class="bullets reveal">
+        <li>정답과 학생 영상은 <b>길이도, 속도도, 박자도</b> 다르다</li>
+        <li>1초 늦게 시작하거나, 중간에 느려지거나, 동작을 길게 끈다</li>
+        <li>"몇 번째 프레임끼리 비교하나?"가 <b>가장 먼저</b> 풀 문제</li>
+      </ul>
+    </div>
+    <div class="reveal">
+      <svg class="dia" viewBox="0 0 360 200" aria-label="두 타임라인 비교">
+        <text x="0" y="34" fill="var(--cyan)" font-family="var(--mono)" font-size="12">정답 (ref)</text>
+        <line x1="0" y1="50" x2="360" y2="50" stroke="var(--line)"/>
+        <g fill="var(--cyan)"><circle cx="60" cy="50" r="7"/><circle cx="170" cy="50" r="7"/><circle cx="290" cy="50" r="7"/></g>
+        <text x="48" y="74" fill="var(--dim)" font-size="11">A</text><text x="160" y="74" fill="var(--dim)" font-size="11">B</text><text x="280" y="74" fill="var(--dim)" font-size="11">C</text>
+        <text x="0" y="138" fill="var(--magenta)" font-family="var(--mono)" font-size="12">학생 (target)</text>
+        <line x1="0" y1="154" x2="360" y2="154" stroke="var(--line)"/>
+        <g fill="var(--magenta)"><circle cx="92" cy="154" r="7"/><circle cx="232" cy="154" r="7"/><circle cx="320" cy="154" r="7"/></g>
+        <text x="80" y="178" fill="var(--dim)" font-size="11">A</text><text x="222" y="178" fill="var(--dim)" font-size="11">B</text><text x="310" y="178" fill="var(--dim)" font-size="11">C</text>
+        <g stroke="rgba(255,255,255,.25)" stroke-dasharray="3 4"><line x1="60" y1="57" x2="92" y2="147"/><line x1="170" y1="57" x2="232" y2="147"/><line x1="290" y1="57" x2="320" y2="147"/></g>
+      </svg>
+      <p class="cap">같은 A·B·C 동작이지만 도착 시각이 다르다</p>
+    </div>
+  </div>
+  <aside class="notes">춤 비교의 진짜 어려움은 '동작'이 아니라 <b>'시간'</b>이에요. 똑같이 잘 췄어도 0.5초 늦게 시작하면 프레임 번호가 다 밀리죠. 이 시간 차이를 어떻게 맞추느냐가 핵심입니다.</aside>
+</section>
+
+<!-- S5 · 1:1 비교의 실패 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">05 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>가장 단순한 시도</span>
+      <h2 class="reveal">1:1 프레임 비교는 <span class="accent m">왜 실패하나</span></h2>
+      <ul class="bullets reveal">
+        <li>가장 쉬운 방법: 정답 i번째 ↔ 학생 i번째를 그냥 비교</li>
+        <li>학생이 조금만 밀려도 <b class="m">엉뚱한 순간끼리</b> 비교됨</li>
+        <li>정답의 "펀치" ↔ 학생의 "준비 중" → 잘 췄는데 큰 오차로 오판</li>
+      </ul>
+      <div class="callout warn reveal" style="margin-top:1em"><span class="tag">RESULT</span>시작 오프셋·속도 차이에 <b>치명적으로 취약</b></div>
+    </div>
+    <div class="reveal">
+      <svg class="dia" viewBox="0 0 360 200" aria-label="1:1 비교 실패">
+        <line x1="0" y1="55" x2="360" y2="55" stroke="var(--line)"/><line x1="0" y1="150" x2="360" y2="150" stroke="var(--line)"/>
+        <g fill="var(--cyan)"><circle cx="60" cy="55" r="6"/><circle cx="130" cy="55" r="6"/><circle cx="200" cy="55" r="6"/><circle cx="270" cy="55" r="6"/></g>
+        <g fill="var(--magenta)"><circle cx="60" cy="150" r="6"/><circle cx="130" cy="150" r="6"/><circle cx="200" cy="150" r="6"/><circle cx="270" cy="150" r="6"/></g>
+        <g stroke="var(--magenta)" stroke-width="1.5"><line x1="60" y1="62" x2="60" y2="143"/><line x1="130" y1="62" x2="130" y2="143"/><line x1="200" y1="62" x2="200" y2="143"/><line x1="270" y1="62" x2="270" y2="143"/></g>
+        <g stroke="var(--magenta)" stroke-width="2"><line x1="124" y1="98" x2="136" y2="110"/><line x1="136" y1="98" x2="124" y2="110"/><line x1="194" y1="98" x2="206" y2="110"/><line x1="206" y1="98" x2="194" y2="110"/></g>
+        <text x="38" y="34" fill="var(--cyan)" font-family="var(--mono)" font-size="11">같은 번호끼리 강제 연결</text>
+        <text x="120" y="190" fill="var(--magenta)" font-family="var(--mono)" font-size="11">✕ 엉뚱한 짝</text>
+      </svg>
+      <p class="cap">번호만 맞춘 비교 — 밀리면 전부 어긋난다</p>
+    </div>
+  </div>
+  <aside class="notes">그냥 같은 번호끼리 비교하면, 0.5초 밀린 학생은 모든 순간이 어긋나서 '엉망으로 췄다'고 나와요. 사람이 봤을 땐 잘 췄는데 말이죠. 그래서 <b>더 똑똑한 정렬</b>이 필요합니다.</aside>
+</section>
+
+<!-- S6 · 핵심 아이디어: 고무줄 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">06 / 42</span></div>
+  <div class="slide-content center">
+    <span class="eyebrow reveal"><span class="dot"></span>핵심 아이디어</span>
+    <h2 class="reveal">시간을 <span class="accent">늘였다 줄였다</span> 하며 맞추기</h2>
+    <div class="reveal" style="width:min(92vw,760px);margin:clamp(.8rem,2.5vh,1.6rem) 0">
+      <svg class="dia" viewBox="0 0 720 130" aria-label="시간 워핑">
+        <path class="ref" fill="none" stroke-width="2.5" d="M0,30 Q90,4 180,30 T360,30 T540,30 T720,30"/>
+        <path class="tgt" fill="none" stroke-width="2.5" d="M0,100 Q60,128 120,100 Q180,72 260,100 Q360,128 470,100 T720,100"/>
+        <g stroke="rgba(255,255,255,.2)" stroke-dasharray="3 4">
+          <line x1="90" y1="16" x2="60" y2="114"/><line x1="180" y1="16" x2="120" y2="114"/><line x1="270" y1="16" x2="260" y2="86"/><line x1="450" y1="16" x2="470" y2="114"/><line x1="630" y1="16" x2="640" y2="86"/>
+        </g>
+      </svg>
+    </div>
+    <p class="lead reveal"><b>DTW = Dynamic Time Warping</b> — 시간을 고무줄처럼 휘어 두 춤이 가장 잘 포개지는 대응을 찾는다.</p>
+    <p class="body reveal center" style="margin-top:.6em">단, 순서는 못 바꾼다(1번 다음엔 2번). <b>속도만</b> 조절할 뿐.</p>
+  </div>
+  <aside class="notes">DTW를 한 문장으로 말하면 <b>'시간을 고무줄처럼 늘렸다 줄였다 하면서 두 춤을 가장 잘 겹치는 지점을 찾는 것'</b>이에요. 순서는 못 바꾸고 속도만 조절합니다. 이 직관 하나만 가져가도 절반은 이해한 겁니다.</aside>
+</section>
+
+<!-- S7 · 거리 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">07 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>재료 ① 거리</span>
+      <h2 class="reveal">두 포즈가 <span class="accent">얼마나 다른가</span>를 숫자로</h2>
+      <ul class="bullets reveal">
+        <li>시간을 맞추려면 먼저 "두 순간이 얼마나 다른가"를 수치화</li>
+        <li>흔한 자: <b>유클리드 거리</b> — 관절 좌표 차이를 제곱해 더하고 루트</li>
+        <li>거리가 <b class="c">작을수록</b> 두 순간의 포즈가 닮았다</li>
+      </ul>
+      <div class="formula reveal" style="margin-top:1em">d = <span class="dim">√(</span> Σ <span class="m">(학생ⱼ − 정답ᵢ)</span>² <span class="dim">)</span></div>
+      <p class="gloss reveal">두 점 사이 직선 거리. 관절마다 재서 합친다.</p>
+    </div>
+    <div class="reveal">
+      <svg class="dia" viewBox="0 0 240 220" aria-label="두 스켈레톤 거리">
+        <g stroke="var(--cyan)" stroke-width="2" fill="var(--cyan)">
+          <circle cx="80" cy="40" r="5"/><line x1="80" y1="40" x2="80" y2="100"/><line x1="80" y1="60" x2="50" y2="95"/><line x1="80" y1="60" x2="110" y2="90"/><line x1="80" y1="100" x2="62" y2="160"/><line x1="80" y1="100" x2="98" y2="160"/>
+        </g>
+        <g stroke="var(--magenta)" stroke-width="2" fill="var(--magenta)">
+          <circle cx="120" cy="46" r="5"/><line x1="120" y1="46" x2="118" y2="106"/><line x1="120" y1="64" x2="150" y2="88"/><line x1="120" y1="64" x2="95" y2="100"/><line x1="118" y1="106" x2="104" y2="166"/><line x1="118" y1="106" x2="138" y2="164"/>
+        </g>
+        <g stroke="rgba(255,255,255,.4)" stroke-dasharray="2 3"><line x1="80" y1="40" x2="120" y2="46"/><line x1="110" y1="90" x2="150" y2="88"/><line x1="50" y1="95" x2="95" y2="100"/></g>
+      </svg>
+      <p class="cap">관절별 차이(점선)의 합 → 거리 하나</p>
+    </div>
+  </div>
+  <aside class="notes">DTW의 재료는 <b>'거리'</b>예요. 두 포즈가 얼마나 다른지를 숫자 하나로 만든 거죠. 학생 손이 정답보다 멀리 떨어져 있으면 거리가 크고, 딱 겹치면 0에 가깝습니다. 이 거리를 모든 순간 쌍에 대해 잴 거예요.</aside>
+</section>
+
+<!-- S8 · 비용 행렬 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">08 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>재료 ② 비용 행렬</span>
+      <h2 class="reveal">모든 순간 쌍의 <span class="accent">거리표</span></h2>
+      <ul class="bullets reveal">
+        <li>정답 i와 학생 j의 <b>모든 조합</b>에 거리를 계산 → 표</li>
+        <li><span class="kbd">D[i,j]</span> = 정답 i와 학생 j 포즈의 거리</li>
+        <li><b class="c">파란 칸</b>이 이어진 길 = 닮은 순간들이 이어진 길</li>
+      </ul>
+      <div class="callout reveal" style="margin-top:1em"><span class="tag">GOAL</span>이 표의 <b>왼쪽 아래 → 오른쪽 위</b>로, 가장 파란(비용 작은) 길을 찾는다</div>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 240 240" style="max-width:min(40vw,300px);margin:0 auto" id="costHeat" aria-label="비용 행렬 히트맵"></svg>
+      <p class="cap">cost matrix — 어두울수록 닮음(저비용)</p>
+    </div>
+  </div>
+  <aside class="notes">정답 프레임과 학생 프레임의 <b>모든 짝</b>에 대해 거리를 재서 큰 표를 만들어요. 파란색(가까움)이 이어지는 자리가 '두 춤이 닮은 길'입니다. 이제 할 일은 이 표의 왼쪽 아래에서 오른쪽 위까지 <b>가장 파란(비용 작은) 길</b>을 찾는 거예요.</aside>
+</section>
+
+<!-- S9 · 누적 비용 점화식 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">09 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>핵심 ③ 누적 비용</span>
+      <h2 class="reveal">점화식, <span class="accent">친절 버전</span></h2>
+      <div class="formula reveal" style="text-align:left;font-size:clamp(.78rem,1.7vw,1.15rem)">
+        γ(i,j) = <span class="m">D[i,j]</span><br>&nbsp;&nbsp;+ min<span class="dim">(</span> γ(i−1,j), γ(i,j−1), <span class="c">γ(i−1,j−1)</span> <span class="dim">)</span>
+      </div>
+      <p class="gloss reveal" style="text-align:left">이 칸까지 가장 싸게 = 이 칸 거리 + (왼/아래/대각선 중 제일 싸게 온 길)</p>
+      <ul class="bullets reveal" style="margin-top:.8em">
+        <li><b class="c">대각선</b> = 둘 다 한 프레임씩 전진(정상 속도)</li>
+        <li><b>가로/세로</b> = 한쪽 멈추고 한쪽만 전진(시간 늘이기)</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 220 200" style="max-width:min(38vw,280px);margin:0 auto" aria-label="세 방향 이동">
+        <rect x="120" y="30" width="60" height="60" rx="6" fill="rgba(255,45,149,.18)" stroke="var(--magenta)"/>
+        <text x="150" y="66" fill="var(--text)" font-family="var(--mono)" font-size="13" text-anchor="middle">i,j</text>
+        <rect x="40" y="30" width="60" height="60" rx="6" fill="var(--surface2)" stroke="var(--line)"/>
+        <rect x="120" y="110" width="60" height="60" rx="6" fill="var(--surface2)" stroke="var(--line)"/>
+        <rect x="40" y="110" width="60" height="60" rx="6" fill="rgba(34,211,238,.12)" stroke="var(--cyan)"/>
+        <g stroke="var(--muted)" stroke-width="1.8" marker-end="url(#ar)">
+          <line x1="104" y1="60" x2="116" y2="60"/><line x1="150" y1="106" x2="150" y2="94"/><line x1="104" y1="146" x2="118" y2="92"/>
+        </g>
+        <defs><marker id="ar" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--muted)"/></marker></defs>
+        <text x="70" y="200" fill="var(--cyan)" font-size="10" text-anchor="middle" font-family="var(--mono)">대각선=정상</text>
+      </svg>
+      <p class="cap">세 방향 중 가장 싼 길을 잇는다</p>
+    </div>
+  </div>
+  <aside class="notes">겁먹지 마세요. 이 식은 <b>'여기까지 가장 싸게 오는 법은, 직전 세 칸 중 제일 싸게 온 곳에 현재 칸 비용을 더하는 것'</b>이라는 당연한 말이에요. 대각선으로 오면 둘 다 정상 전진, 옆으로 오면 한쪽이 기다린 거예요. 표를 왼아래부터 채워 올라가면 오른위 칸에 '전체 최소 비용'이 적힙니다.</aside>
+</section>
+
+<!-- S10 · 최적 경로 역추적 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">10 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>핵심 ④ 경로</span>
+      <h2 class="reveal">역추적으로 <span class="accent">길 복원</span></h2>
+      <ul class="bullets reveal">
+        <li>표를 다 채우면 끝점 <span class="kbd">(n,m)</span>에서 <b>거꾸로</b> "어디서 왔는지" 따라 내려옴</li>
+        <li>경로 위 점 <span class="kbd">(i,j)</span> = "정답 i ↔ 학생 j가 짝"이라는 대응표</li>
+        <li>이게 <b class="c">DTW의 최종 산출물 1호</b> — 정렬 결과</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 240 240" style="max-width:min(40vw,300px);margin:0 auto" id="pathGrid" aria-label="워핑 경로 역추적"></svg>
+      <p class="cap">(n,m) → (0,0) 역추적 경로</p>
+    </div>
+  </div>
+  <aside class="notes">표를 다 채운 뒤엔 끝에서부터 '내가 어느 방향에서 왔지?'를 거슬러 따라 내려와요. 그러면 <b>'정답 5번 = 학생 7번, 정답 6번 = 학생 7번...'</b> 하는 대응표가 나옵니다. 이게 두 춤을 맞춘 결과예요.</aside>
+</section>
+
+<!-- S11 · 제약 조건 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">11 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>규칙</span>
+    <h2 class="reveal">경로가 지켜야 할 <span class="accent">세 가지</span></h2>
+    <div class="grid-3 reveal" style="margin-top:clamp(.8rem,2.5vh,1.6rem)">
+      <div class="card cyan"><h3>① 경계 조건</h3><p>시작 <span class="kbd">(0,0)</span>, 끝 <span class="kbd">(n,m)</span> 고정 — 처음과 끝은 서로 맞물린다.</p></div>
+      <div class="card mag"><h3>② 단조성</h3><p>시간은 <b>뒤로 못 간다</b>. i, j는 줄지 않는다 → 동작 <b>순서 보존</b>.</p></div>
+      <div class="card cyan"><h3>③ 연속성</h3><p>한 번에 <b>한 칸씩만</b>. 동작을 통째로 건너뛰지 않는다.</p></div>
+    </div>
+    <div class="callout reveal" style="margin-top:clamp(1rem,3vh,1.6rem)"><span class="tag">WHY</span>이 규칙들이 <b>"순서는 지키되 속도만 조절"</b>을 수학적으로 보장한다. 규칙을 어떻게 조이느냐가 <b class="m">Part 3</b>의 핵심.</div>
+  </div>
+  <aside class="notes">DTW가 막 휘어도 되는 건 아니에요. 세 규칙이 있어요. 시작·끝은 맞물려야 하고, 시간은 뒤로 못 가고, 한 칸씩만 움직여요. 이 규칙 덕분에 '3번 동작을 1번이랑 비교'하는 일이 안 생깁니다. <b>이 규칙을 어떻게 조이느냐가 Part 3</b>의 핵심이 됩니다.</aside>
+</section>
+
+<!-- S12 · 경로 vs 거리 (가장 중요) -->
+<section class="slide hero">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">12 / 42</span></div>
+  <div class="slide-content center">
+    <span class="eyebrow m reveal"><span class="dot"></span>⭐ 오늘 단 하나만 가져간다면</span>
+    <h2 class="reveal" style="font-size:clamp(1.6rem,4vw,3rem)">경로 = <span class="accent">타이밍</span> &nbsp;/&nbsp; 거리 = <span class="accent m">자세</span></h2>
+    <div class="grid-2 reveal" style="width:min(94vw,900px);margin:clamp(.9rem,2.5vh,1.6rem) 0">
+      <div class="card cyan"><span class="ico">⏱️</span><h3>경로 (warping path)</h3><p>시간을 얼마나 늘이고 줄였나 → <b class="ok">타이밍</b> 점수의 재료</p></div>
+      <div class="card mag"><span class="ico">🧍</span><h3>정렬 후 거리 (distance)</h3><p>시간 맞춘 뒤에도 남는 포즈 차이 → <b class="ok">자세</b> 점수의 재료</p></div>
+    </div>
+    <div class="callout warn reveal" style="max-width:760px"><span class="tag">⚠️ 혼동 금지</span>거리를 타이밍에 넣으면 <b>"자세가 틀린 것"이 "박자가 틀린 것"으로 둔갑</b>한다.</div>
+  </div>
+  <aside class="notes">오늘 단 하나만 가져간다면 이겁니다. DTW는 두 개의 답을 줘요. <b>'시간을 얼마나 비틀었나(경로)'는 타이밍</b>이고, <b>'시간을 맞춘 뒤에도 남은 차이(거리)'는 자세</b>예요. 이 둘을 섞으면 피드백이 거짓말을 합니다. 우리 코드에서 실제로 헷갈리기 쉬운 지점이에요.</aside>
+</section>
+
+<!-- S13 · 미니 예제 1 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">13 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>손으로 따라가기 (1/2)</span>
+      <h2 class="reveal">숫자로 <span class="accent">직접</span> 해보자</h2>
+      <ul class="bullets reveal">
+        <li>정답 <span class="kbd">A = [1, 2, 3]</span></li>
+        <li>학생 <span class="kbd">B = [1, 1, 2, 3]</span> — 시작에서 한 박 머뭇</li>
+        <li>거리 = 숫자 차이의 절댓값 <span class="kbd">|a − b|</span></li>
+      </ul>
+    </div>
+    <div class="reveal t-wrap">
+      <table>
+        <tr><th>D</th><th>b=1</th><th>b=1</th><th>b=2</th><th>b=3</th></tr>
+        <tr><th>a=1</th><td class="good">0</td><td class="good">0</td><td>1</td><td>2</td></tr>
+        <tr><th>a=2</th><td>1</td><td>1</td><td class="good">0</td><td>1</td></tr>
+        <tr><th>a=3</th><td>2</td><td>2</td><td>1</td><td class="good">0</td></tr>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">복잡한 좌표 대신 그냥 숫자로 해볼게요. 정답은 1,2,3인데 학생은 <b>1을 두 번</b> 했어요(머뭇거림). 각 칸은 두 숫자 차이의 절댓값입니다. 0이면 똑같다는 뜻이죠. 다음 장에서 이 표를 따라 최소 비용 길을 찾아봅시다.</aside>
+</section>
+
+<!-- S14 · 미니 예제 2 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">14 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>손으로 따라가기 (2/2)</span>
+      <h2 class="reveal">경로가 <span class="accent">머뭇거림</span>을 흡수</h2>
+      <ul class="bullets reveal">
+        <li>끝점 누적 비용 = <b class="c">0</b>. 경로가 첫 칸을 <b>가로로</b> 한 번 더 감</li>
+        <li>학생의 중복 "1"을 <b>시간 늘이기</b>로 흡수 → 자세 거리 0</li>
+        <li>해석: <b class="c">포즈는 완벽(거리 0)</b>, 시작에 <b class="m">한 박 머뭇(경로 휨=타이밍)</b></li>
+      </ul>
+      <div class="callout reveal" style="margin-top:.9em"><span class="tag">PROOF</span>S12의 <b>경로/거리 분리</b>가 숫자로 증명됨</div>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 240 200" style="max-width:min(38vw,290px);margin:0 auto" aria-label="미니 경로">
+        <g id="miniCells"></g>
+        <path class="draw" style="--len:420" fill="none" stroke="var(--cyan)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M30,170 L80,170 L130,120 L180,70 L200,40"/>
+      </svg>
+      <p class="cap">첫 칸 가로 이동 = 머뭇 흡수</p>
+    </div>
+  </div>
+  <aside class="notes">보세요. 학생이 1을 두 번 했지만, 경로가 그 구간을 <b>옆으로 한 칸 휘면서 흡수</b>했어요. 그래서 '자세 차이'는 0으로 나오고, 대신 '경로가 휜 정도'에 머뭇거림이 기록됩니다. <b>자세는 완벽, 타이밍에만 흠</b>. DTW가 이 둘을 어떻게 나눠 담는지 숫자로 확인한 거예요.</aside>
+</section>
+
+<!-- S15 · Part 1 요약 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 1</b> · 기초 이론</span><span class="pg">15 / 42</span></div>
+  <div class="slide-content center">
+    <span class="eyebrow reveal"><span class="dot"></span>Part 1 요약</span>
+    <h2 class="reveal">DTW <span class="accent">한 장</span> 정리</h2>
+    <div class="reveal" style="display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;margin:clamp(.8rem,2vh,1.4rem) 0;font-family:var(--mono);font-size:clamp(.66rem,1.3vw,.92rem)">
+      <span class="flow">거리 재기</span><span class="arr">→</span><span class="flow">비용 행렬</span><span class="arr">→</span><span class="flow">누적 비용</span><span class="arr">→</span><span class="flow hot">경로</span>
+      <span class="arr" style="color:var(--cyan)">⟹</span><span class="flow" style="border-color:var(--cyan)">⏱️ 타이밍</span><span class="flow" style="border-color:var(--magenta)">🧍 자세</span>
+    </div>
+    <ul class="bullets reveal" style="max-width:680px;text-align:left">
+      <li>규칙: <b>경계 · 단조성 · 연속성</b></li>
+      <li>산출: <b class="c">경로=타이밍</b>, <b class="m">거리=자세</b> (절대 혼동 금지)</li>
+      <li>비용: 프레임 수 곱 <span class="kbd">O(n×m)</span> — 길면 무겁다(Part 3에서 band로 절감)</li>
+    </ul>
+  </div>
+  <aside class="notes">여기까지가 DTW의 전부예요. 거리 재고, 표 만들고, 누적하고, 길 찾고, 그 길에서 타이밍과 자세를 뽑는다. 계산량은 두 영상 길이의 곱이라 길면 무거워진다는 것만 기억하세요. 이제 이걸 <b>'춤'에 어떻게 붙이는지</b>로 갑니다.</aside>
+</section>
+
+<!-- ============================ PART 2 — 댄스 특화 피드백 ============================ -->
+
+<!-- S16 · 무엇을 비교 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">16 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>좌표에서 의미로</span>
+      <h2 class="reveal">무엇의 <span class="accent">거리</span>를 잴까?</h2>
+      <ul class="bullets reveal">
+        <li>DTW의 재료는 "두 순간이 얼마나 다른가" — 그럼 <b>무엇의</b> 거리?</li>
+        <li>날 좌표만으론 부족: <b class="m">카메라·체격·화면 속 위치</b>가 섞임</li>
+        <li>그래서 ① <b class="c">정규화</b> → ② 움직임의 <b class="c">의미(운동학 지표)</b>로 비교</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 280 180" style="max-width:min(42vw,320px);margin:0 auto" aria-label="좌표에서 의미로">
+        <g fill="var(--cyan)" opacity=".8"><circle cx="30" cy="40" r="3"/><circle cx="50" cy="55" r="3"/><circle cx="40" cy="80" r="3"/><circle cx="60" cy="100" r="3"/><circle cx="35" cy="120" r="3"/></g>
+        <text x="40" y="160" fill="var(--dim)" font-size="11" text-anchor="middle" font-family="var(--mono)">날 좌표 (x,y)</text>
+        <g stroke="var(--muted)" stroke-width="1.8" marker-end="url(#ar2)"><line x1="95" y1="80" x2="150" y2="80"/></g>
+        <defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--muted)"/></marker></defs>
+        <g transform="translate(175,30)">
+          <rect width="90" height="30" rx="6" fill="rgba(34,211,238,.1)" stroke="var(--cyan)"/><text x="45" y="20" fill="var(--cyan)" font-size="12" text-anchor="middle" font-family="var(--mono)">속도</text>
+          <rect y="40" width="90" height="30" rx="6" fill="rgba(255,45,149,.1)" stroke="var(--magenta)"/><text x="45" y="60" fill="var(--magenta)" font-size="12" text-anchor="middle" font-family="var(--mono)">각도</text>
+          <rect y="80" width="90" height="30" rx="6" fill="rgba(163,230,53,.1)" stroke="var(--lime)"/><text x="45" y="100" fill="var(--lime)" font-size="12" text-anchor="middle" font-family="var(--mono)">스냅</text>
+        </g>
+      </svg>
+      <p class="cap">위치가 아니라 '움직임의 의미'를 비교</p>
+    </div>
+  </div>
+  <aside class="notes">춤을 비교한다는 건 결국 <b>'무엇을' 비교하느냐</b>의 문제예요. 그냥 화면 좌표를 비교하면 카메라가 조금만 움직여도 다 틀어져요. 그래서 위치를 정규화하고, 좌표를 '속도·각도·스냅' 같은 <b>춤의 언어</b>로 바꿔서 비교합니다.</aside>
+</section>
+
+<!-- S17 · 정규화 1 중심 이동 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">17 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>정규화 ①</span>
+      <h2 class="reveal">중심 이동 — <span class="accent">화면 속 위치</span> 지우기</h2>
+      <ul class="bullets reveal">
+        <li>매 프레임 <b>골반 중심(양 엉덩이 중점)</b>을 원점(0,0)으로</li>
+        <li>효과: 화면 어디 서 있든 <b class="c">동일하게 비교</b></li>
+      </ul>
+      <div class="formula reveal" style="margin-top:1em;font-size:clamp(.8rem,1.7vw,1.15rem)">관절′ = 관절 <span class="m">− 골반</span></div>
+      <p class="gloss reveal">모든 좌표에서 골반 좌표를 빼면, 골반이 항상 0</p>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 300 180" style="max-width:min(40vw,320px);margin:0 auto" aria-label="중심 이동">
+        <text x="55" y="16" fill="var(--dim)" font-size="11" text-anchor="middle" font-family="var(--mono)">before</text>
+        <g stroke="var(--cyan)" stroke-width="2" fill="var(--cyan)" opacity=".5"><circle cx="30" cy="50" r="4"/><line x1="30" y1="50" x2="30" y2="90"/><line x1="30" y1="90" x2="22" y2="120"/><line x1="30" y1="90" x2="38" y2="120"/></g>
+        <g stroke="var(--magenta)" stroke-width="2" fill="var(--magenta)" opacity=".5"><circle cx="85" cy="60" r="4"/><line x1="85" y1="60" x2="85" y2="100"/><line x1="85" y1="100" x2="77" y2="128"/><line x1="85" y1="100" x2="93" y2="128"/></g>
+        <line x1="135" y1="90" x2="175" y2="90" stroke="var(--muted)" stroke-width="1.8" marker-end="url(#ar3)"/>
+        <defs><marker id="ar3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--muted)"/></marker></defs>
+        <text x="245" y="16" fill="var(--cyan)" font-size="11" text-anchor="middle" font-family="var(--mono)">after (겹침)</text>
+        <line x1="245" y1="40" x2="245" y2="140" stroke="var(--line)"/><line x1="200" y1="95" x2="290" y2="95" stroke="var(--line)"/>
+        <g stroke="var(--cyan)" stroke-width="2" fill="var(--cyan)"><circle cx="245" cy="60" r="4"/><line x1="245" y1="60" x2="245" y2="95"/><line x1="245" y1="95" x2="236" y2="125"/><line x1="245" y1="95" x2="254" y2="125"/></g>
+        <g stroke="var(--magenta)" stroke-width="2" fill="var(--magenta)" opacity=".7"><circle cx="248" cy="58" r="4"/><line x1="248" y1="58" x2="247" y2="95"/></g>
+      </svg>
+      <p class="cap">골반을 원점으로 → 같은 출발선</p>
+    </div>
+  </div>
+  <aside class="notes">첫 번째 정규화는 <b>위치 지우기</b>예요. 한 명은 화면 왼쪽, 한 명은 오른쪽에 있어도 골반을 원점으로 맞춰 겹치면 같은 출발선에서 비교할 수 있죠. 좌표에서 골반 좌표를 빼는 게 전부입니다.</aside>
+</section>
+
+<!-- S18 · 정규화 2 스케일 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">18 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>정규화 ②</span>
+      <h2 class="reveal">스케일 — <span class="accent">체격 차이</span> 지우기</h2>
+      <ul class="bullets reveal">
+        <li>모든 좌표를 <b>torso 길이(어깨~골반)</b>로 나눈다</li>
+        <li>영상당 <b class="c">평균 1개 값으로 고정</b> → 프레임마다 안 흔들리게</li>
+        <li>효과: 키·팔 길이 차이 제거. <span class="dim">(회전은 정면 가정으로 보정 안 함)</span></li>
+      </ul>
+      <div class="formula reveal" style="margin-top:1em;font-size:clamp(.8rem,1.7vw,1.15rem)">관절″ = 관절′ <span class="c">÷ torso</span></div>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 280 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="스케일 정규화">
+        <g stroke="var(--cyan)" stroke-width="2" fill="var(--cyan)"><circle cx="60" cy="30" r="5"/><line x1="60" y1="35" x2="60" y2="95"/><line x1="60" y1="50" x2="40" y2="78"/><line x1="60" y1="50" x2="80" y2="78"/><line x1="60" y1="95" x2="46" y2="150"/><line x1="60" y1="95" x2="74" y2="150"/></g>
+        <line x1="92" y1="38" x2="92" y2="92" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 3"/><text x="118" y="68" fill="var(--amber)" font-size="11" font-family="var(--mono)">torso</text>
+        <g stroke="var(--magenta)" stroke-width="2" fill="var(--magenta)" transform="translate(150,0) scale(1.25)"><circle cx="60" cy="24" r="4"/><line x1="60" y1="28" x2="60" y2="76"/><line x1="60" y1="40" x2="44" y2="62"/><line x1="60" y1="40" x2="76" y2="62"/><line x1="60" y1="76" x2="48" y2="118"/><line x1="60" y1="76" x2="72" y2="118"/></g>
+        <text x="60" y="172" fill="var(--cyan)" font-size="10" text-anchor="middle" font-family="var(--mono)">작은 댄서</text>
+        <text x="220" y="172" fill="var(--magenta)" font-size="10" text-anchor="middle" font-family="var(--mono)">큰 댄서</text>
+      </svg>
+      <p class="cap">몸통을 자로 삼아 같은 크기로</p>
+    </div>
+  </div>
+  <aside class="notes">두 번째는 <b>크기 맞추기</b>. 키가 다르면 손이 움직인 거리도 달라지죠. 그래서 몸통 길이를 자로 삼아 전부 나눠줘요. 그러면 '키 대비 얼마나 움직였나'로 비교돼서 어른과 아이도 공정하게 비교됩니다. 매 프레임 값이 튀지 않게 <b>영상당 한 개 값으로 고정</b>하는 게 포인트.</aside>
+</section>
+
+<!-- S19 · 운동학 지표 개요 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">19 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>좌표 → 운동학 지표</span>
+    <h2 class="reveal">움직임을 <span class="accent">5가지 언어</span>로</h2>
+    <div class="reveal t-wrap" style="margin-top:clamp(.6rem,2vh,1.2rem)">
+      <table>
+        <tr><th>지표</th><th>계산 (직관)</th><th>춤에서의 의미</th></tr>
+        <tr><td><b>velocity</b> 속도</td><td>좌표의 1차 차분(변화량)</td><td>동작이 도착하는 속도</td></tr>
+        <tr><td><b>acceleration</b> 가속도</td><td>2차 차분</td><td>치고 나가는 힘</td></tr>
+        <tr><td><b>jerk</b> 저크</td><td>3차 차분</td><td><span class="good">스냅·끊어치는 히트감</span></td></tr>
+        <tr><td><b>angle</b> 각도</td><td>세 관절의 사잇각</td><td>팔 라인·무릎 접힘</td></tr>
+        <tr><td><b>angular velocity</b></td><td>각도의 1차 차분</td><td>방향 전환 질감</td></tr>
+      </table>
+    </div>
+    <p class="body reveal" style="margin-top:.8em">차분 = "이전 프레임과 얼마나 달라졌나". <b>1번이면 속도, 2번이면 힘, 3번이면 스냅.</b></p>
+  </div>
+  <aside class="notes">정규화된 좌표에서 이 다섯을 뽑아요. <b>차분</b>이라는 건 그냥 '이전 프레임과 얼마나 달라졌나'예요. 한 번 차분하면 속도, 두 번이면 가속도, 세 번이면 저크. 거기에 관절 사잇각을 더하면 춤을 묘사하는 언어가 완성됩니다.</aside>
+</section>
+
+<!-- S20 · 팔 각도 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">20 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>팔 각도</span>
+      <h2 class="reveal">세 관절의 <span class="accent">사잇각</span></h2>
+      <ul class="bullets reveal">
+        <li>어깨→팔꿈치 벡터와 손목→팔꿈치 벡터의 <b>사잇각 θ</b></li>
+        <li>왜 좌표 대신 각도? 팔을 어디 두든 <b class="c">'얼마나 폈나'</b>는 위치 무관 본질</li>
+        <li>피드백 예: <b class="m">"팔이 정답보다 20° 덜 펴졌습니다"</b></li>
+      </ul>
+      <div class="formula reveal" style="margin-top:.9em;font-size:clamp(.72rem,1.5vw,1rem)">cos θ = <span class="c">(u·v)</span> / <span class="dim">(|u||v|)</span></div>
+      <p class="gloss reveal">두 벡터가 이루는 각. 내적으로 구한다.</p>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 220 200" style="max-width:min(36vw,260px);margin:0 auto" aria-label="팔 각도">
+        <line x1="50" y1="40" x2="110" y2="110" stroke="var(--cyan)" stroke-width="3"/>
+        <line x1="110" y1="110" x2="180" y2="95" stroke="var(--cyan)" stroke-width="3"/>
+        <path d="M95,95 A30,30 0 0 1 138,103" fill="none" stroke="var(--magenta)" stroke-width="2.5"/>
+        <text x="128" y="88" fill="var(--magenta)" font-size="16" font-family="var(--mono)">θ</text>
+        <g fill="var(--cyan)"><circle cx="50" cy="40" r="6"/><circle cx="110" cy="110" r="7"/><circle cx="180" cy="95" r="6"/></g>
+        <text x="50" y="28" fill="var(--dim)" font-size="10" text-anchor="middle" font-family="var(--mono)">어깨</text>
+        <text x="110" y="135" fill="var(--dim)" font-size="10" text-anchor="middle" font-family="var(--mono)">팔꿈치</text>
+        <text x="188" y="84" fill="var(--dim)" font-size="10" font-family="var(--mono)">손목</text>
+      </svg>
+      <p class="cap">팔꿈치 사잇각 = 팔 라인</p>
+    </div>
+  </div>
+  <aside class="notes">팔 라인 피드백의 핵심이 각도예요. 손이 화면 어디 있든, 팔꿈치가 얼마나 펴졌는지는 변하지 않죠. 세 관절로 사잇각을 구하는데, <b>내적</b>이라는 도구를 쓰면 두 벡터의 각도가 딱 나와요. '20도 덜 폈다' 같은 구체적 피드백이 여기서 나옵니다.</aside>
+</section>
+
+<!-- S21 · 타이밍 박자 lag -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">21 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>타이밍 · 박자</span>
+      <h2 class="reveal">경로에서 <span class="accent">lag</span> 읽기</h2>
+      <ul class="bullets reveal">
+        <li><span class="kbd">lag = tgt_j − ref_i</span> — 정답 i에 학생 몇 번째가 붙었나</li>
+        <li><b class="m">+</b> 늦음(뒤처짐) / <b class="c">−</b> 빠름(앞서감)</li>
+        <li>점수: 경로를 <b>best-fit 직선</b>에 맞추고, 벗어난 <b>잔차</b>로 채점</li>
+        <li>봐주는 것: 시작 오프셋·전체 템포 → <b class="c">국소 흔들림만</b> 감점</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 220 200" style="max-width:min(38vw,280px);margin:0 auto" aria-label="lag 그래프">
+        <rect x="20" y="20" width="180" height="160" fill="none" stroke="var(--line)"/>
+        <line x1="20" y1="180" x2="200" y2="20" stroke="var(--dim)" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <text x="150" y="55" fill="var(--dim)" font-size="9" font-family="var(--mono)">이상적 대각선</text>
+        <path class="draw" style="--len:340" fill="none" stroke="var(--cyan)" stroke-width="3" d="M20,180 L55,150 L70,150 L100,108 L130,95 L150,60 L180,45 L200,20"/>
+        <line x1="100" y1="108" x2="100" y2="80" stroke="var(--magenta)" stroke-width="2" marker-end="url(#ar4)"/>
+        <defs><marker id="ar4" markerWidth="7" markerHeight="7" refX="4" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--magenta)"/></marker></defs>
+        <text x="106" y="96" fill="var(--magenta)" font-size="11" font-family="var(--mono)">lag</text>
+        <text x="10" y="100" fill="var(--magenta)" font-size="10" font-family="var(--mono)" transform="rotate(-90,10,100)">학생 j</text>
+        <text x="110" y="196" fill="var(--cyan)" font-size="10" text-anchor="middle" font-family="var(--mono)">정답 i</text>
+      </svg>
+      <p class="cap">대각선에서 벗어난 정도 = 박자 흔들림</p>
+    </div>
+  </div>
+  <aside class="notes">타이밍은 경로에서 나와요. 정답 5번에 학생 7번이 붙었다면 두 칸 늦은 거죠. 경로가 완벽한 대각선이면 박자가 일정한 거고, 울퉁불퉁하면 흔들린 거예요. 단, <b>'전체적으로 빠르게/느리게 췄다'는 음악 없이 판단 못 하니 봐주고, '구간마다 들쭉날쭉한 것'만</b> 잡습니다.</aside>
+</section>
+
+<!-- S22 · 세기 power -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">22 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>세기 · 파워</span>
+      <h2 class="reveal">저크로 보는 <span class="accent">타격감</span></h2>
+      <ul class="bullets reveal">
+        <li>파워 = 동작의 <b>스냅·타격감</b> → 주로 <b class="c">jerk(3차 차분)</b></li>
+        <li>같은 동작도 <b>흐물흐물 vs 칼같이</b>의 차이가 저크에 드러남</li>
+        <li>비교: 정답 대비 학생의 <b>jerk 비율(ratio)</b> · accel은 선택적 가산</li>
+      </ul>
+      <p class="gloss reveal" style="text-align:left">속도가 얼마나 급격히 변하나. 끊어칠수록 저크가 크다.</p>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 260 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="저크 비교">
+        <path fill="none" stroke="var(--cyan)" stroke-width="2.5" d="M10,90 Q40,40 70,90 T130,90 T190,90 T250,90"/>
+        <text x="10" y="30" fill="var(--cyan)" font-size="10" font-family="var(--mono)">흐물 (저크 작음)</text>
+        <path fill="none" stroke="var(--magenta)" stroke-width="2.5" d="M10,160 L60,160 L62,110 L64,160 L120,160 L122,110 L124,160 L180,160 L182,110 L184,160 L250,160"/>
+        <text x="10" y="178" fill="var(--magenta)" font-size="10" font-family="var(--mono)">칼각 (저크 큼=스냅)</text>
+      </svg>
+      <p class="cap">같은 동작, 다른 스냅</p>
+    </div>
+  </div>
+  <aside class="notes">춤에서 '파워'나 '힘 있다'는 느낌은 사실 <b>속도가 얼마나 급격하게 변하느냐</b>예요. 칼같이 끊어 치면 그 순간 저크가 확 튀죠. 흐물거리면 밋밋하고요. 그래서 저크를 보면 '동작에 스냅이 있나'를 숫자로 잡을 수 있어요.</aside>
+</section>
+
+<!-- S23 · 그루브 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">23 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>그루브</span>
+      <h2 class="reveal">같은 순간에 <span class="accent">강약</span>을 타는가</h2>
+      <ul class="bullets reveal">
+        <li>강약(빠름/느림)을 <b>제 타이밍(위상)에</b> 주는가</li>
+        <li>두 <b>velocity 곡선</b>을 정렬 후 <b class="c">피어슨 상관계수</b></li>
+        <li>1에 가까울수록 "같은 순간 빠르고 느림" = <b>리듬을 함께 탐</b></li>
+        <li><b class="m">크기(진폭)는 일부러 안 봄</b> → 그건 power 담당 (역할 분리)</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 260 170" style="max-width:min(38vw,300px);margin:0 auto" aria-label="그루브 상관">
+        <path fill="none" stroke="var(--cyan)" stroke-width="2.5" d="M10,85 Q45,25 80,85 Q115,140 150,85 Q185,30 220,85 L250,85"/>
+        <path fill="none" stroke="var(--magenta)" stroke-width="2.5" stroke-dasharray="1 0" opacity=".9" d="M10,95 Q45,45 80,95 Q115,135 150,95 Q185,48 220,95 L250,95"/>
+        <text x="130" y="162" fill="var(--lime)" font-size="11" text-anchor="middle" font-family="var(--mono)">산·골이 같은 자리 → 상관 ≈ 1</text>
+      </svg>
+      <p class="cap">두 속도 곡선의 위상 일치</p>
+    </div>
+  </div>
+  <aside class="notes">그루브는 <b>'박자 위에 올라탔나'</b>예요. 빠를 때 같이 빠르고 느릴 때 같이 느리면 그루브가 맞는 거죠. 속도 곡선 두 개를 겹쳐서 산과 골이 같은 자리에 있는지를 상관계수로 봅니다. 세기는 파워가 보니까, <b>그루브는 타이밍만</b> 봐요. 역할을 나눈 거예요.</aside>
+</section>
+
+<!-- S24 · 5종 점수 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">24 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>5종 점수</span>
+    <h2 class="reveal">무엇이 <span class="accent">무엇을</span> 보는가</h2>
+    <div class="reveal t-wrap" style="margin-top:clamp(.6rem,2vh,1.2rem)">
+      <table>
+        <tr><th>점수</th><th>입력 신호</th><th>한 줄 의미</th></tr>
+        <tr><td><b class="ok">timing</b></td><td>DTW <span class="c">경로</span> 잔차</td><td>박자를 일정하게 지켰나</td></tr>
+        <tr><td><b class="ok">posture</b></td><td>angle diff + DTW <span class="m">거리</span></td><td>자세·라인이 정확한가</td></tr>
+        <tr><td><b class="ok">groove</b></td><td>velocity 프로파일 상관</td><td>강약을 제 타이밍에 타나</td></tr>
+        <tr><td><b class="ok">power</b></td><td>jerk 비율</td><td>동작에 스냅·힘이 있나</td></tr>
+        <tr><td><b class="ok">overall</b></td><td>위 4개 가중합</td><td>종합 (가중치는 정책)</td></tr>
+      </table>
+    </div>
+    <p class="body reveal" style="margin-top:.7em">각 점수가 <b>서로 다른 것</b>을 봐야 "타이밍은 좋은데 파워가 약하다" 같은 입체 피드백이 나온다.</p>
+  </div>
+  <aside class="notes">정리하면 다섯 점수가 각자 다른 신호를 봐요. 타이밍은 경로, 자세는 거리, 그루브는 속도 곡선 모양, 파워는 저크. 종합은 이 넷을 가중합. 중요한 건 <b>각 점수가 '서로 다른 것'을 본다</b>는 거예요. 그래야 '타이밍은 좋은데 파워가 약하다' 같은 입체적 피드백이 나옵니다.</aside>
+</section>
+
+<!-- S25 · 코드 vs LLM -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">25 / 42</span></div>
+  <div class="slide-content center">
+    <span class="eyebrow reveal"><span class="dot"></span>역할 분리</span>
+    <h2 class="reveal">코드는 <span class="accent">수학</span>, LLM은 <span class="accent m">통역</span></h2>
+    <div class="grid-2 reveal" style="width:min(94vw,900px);margin:clamp(.9rem,2.5vh,1.6rem) 0">
+      <div class="card cyan"><span class="ico">⚙️</span><h3>코드 (Python)</h3><p>DTW·운동학·5종 점수를 <b>결정론적 계산</b>. 같은 입력 = 같은 점수(재현성).</p></div>
+      <div class="card mag"><span class="ico">💬</span><h3>LLM (Gemini)</h3><p>숫자를 <b>초보자 코치 언어로 번역</b>만. 점수는 새로 매기지 않음.</p></div>
+    </div>
+    <div class="callout reveal" style="max-width:780px"><span class="tag">RULE</span>최종 점수는 <b>코드 계산값으로 덮어씀</b>. 숫자는 문장에서 분리, 시간 값은 코드가 채움 → 환각 차단.</div>
+  </div>
+  <aside class="notes">우리 설계의 철학이에요. 숫자는 무조건 코드가 계산해요. 그래야 같은 영상엔 항상 같은 점수가 나오죠. LLM은 그 숫자를 '팔 스냅이 약해요, 이렇게 연습해보세요'로 통역만 합니다. <b>LLM이 점수를 매기게 두면 매번 흔들리고 신뢰를 잃어요.</b></aside>
+</section>
+
+<!-- S26 · 비교 영상 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">26 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>비교 영상</span>
+      <h2 class="reveal">경로로 두 춤을 <span class="accent">동기화</span></h2>
+      <ul class="bullets reveal">
+        <li>DTW <b>경로</b>로 정답·학생 프레임을 짝지어 <b>나란히 재생</b></li>
+        <li>멈춤 구간은 <b class="c">선형 보간</b>으로 부드럽게 (어느 쪽도 안 끊기게)</li>
+        <li>"내 동작이 정답과 <b class="m">어디서 갈라지는지</b>" 눈으로 확인</li>
+      </ul>
+      <p class="cap reveal" style="text-align:left;margin-top:.6em">※ 이 부분에 Part 3의 함정이 숨어있다</p>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 280 180" style="max-width:min(42vw,320px);margin:0 auto" aria-label="비교 영상">
+        <rect x="10" y="10" width="120" height="120" rx="8" fill="var(--surface2)" stroke="var(--cyan)"/>
+        <rect x="150" y="10" width="120" height="120" rx="8" fill="var(--surface2)" stroke="var(--magenta)"/>
+        <g stroke="var(--cyan)" stroke-width="2.5" fill="var(--cyan)" transform="translate(40,30)"><circle cx="30" cy="15" r="5"/><line x1="30" y1="20" x2="30" y2="55"/><line x1="30" y1="30" x2="10" y2="50"/><line x1="30" y1="30" x2="50" y2="50"/><line x1="30" y1="55" x2="18" y2="85"/><line x1="30" y1="55" x2="42" y2="85"/></g>
+        <g stroke="var(--magenta)" stroke-width="2.5" fill="var(--magenta)" transform="translate(180,30)"><circle cx="30" cy="15" r="5"/><line x1="30" y1="20" x2="30" y2="55"/><line x1="30" y1="30" x2="12" y2="52"/><line x1="30" y1="30" x2="50" y2="50"/><line x1="30" y1="55" x2="18" y2="85"/><line x1="30" y1="55" x2="42" y2="85"/></g>
+        <rect x="10" y="148" width="260" height="22" rx="5" fill="var(--surface2)" stroke="var(--line)"/>
+        <line x1="20" y1="159" x2="260" y2="159" stroke="var(--dim)" stroke-dasharray="2 3"/>
+        <circle cx="120" cy="159" r="5" fill="var(--cyan)"/><circle cx="120" cy="159" r="9" fill="none" stroke="var(--magenta)"/>
+        <text x="140" y="144" fill="var(--dim)" font-size="9" font-family="var(--mono)">경로 동기화</text>
+      </svg>
+      <p class="cap">정답 | 학생 — 같은 동작에서 정렬</p>
+    </div>
+  </div>
+  <aside class="notes">점수만 주면 와닿지 않아요. DTW 경로로 두 영상을 같은 동작끼리 맞춰 나란히 보여주면 <b>'아, 여기서 내 팔이 늦는구나'</b>가 한눈에 보이죠. 경로가 알려주는 대응 관계를 그대로 영상에 쓰는 겁니다. 이 부분은 Part 3에서 함정도 있어요.</aside>
+</section>
+
+<!-- S27 · Part 2 요약 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">27 / 42</span></div>
+  <div class="slide-content center">
+    <span class="eyebrow reveal"><span class="dot"></span>Part 2 요약</span>
+    <h2 class="reveal">좌표가 <span class="accent">피드백</span>이 되기까지</h2>
+    <div class="reveal" style="display:flex;flex-wrap:wrap;justify-content:center;gap:.45rem;margin:clamp(.9rem,2.5vh,1.6rem) 0;font-family:var(--mono);font-size:clamp(.6rem,1.2vw,.84rem)">
+      <span class="flow">좌표</span><span class="arr">→</span><span class="flow">정규화</span><span class="arr">→</span><span class="flow">운동학 지표</span><span class="arr">→</span><span class="flow hot">DTW</span><span class="arr">→</span><span class="flow">5종 점수</span><span class="arr">→</span><span class="flow">LLM 통역</span><span class="arr">→</span><span class="flow">영상+피드백</span>
+    </div>
+    <ul class="bullets reveal" style="max-width:680px;text-align:left">
+      <li>좌표를 <b>정규화 → 운동학 지표</b>로 바꿔 '의미'를 비교</li>
+      <li>경로/거리 + 운동학 지표가 <b class="c">5종 점수</b>로</li>
+      <li>코드가 점수를, <b class="m">LLM이 설명</b>을. 경로로 비교 영상까지</li>
+    </ul>
+  </div>
+  <aside class="notes">Part 1의 DTW가 Part 2에서 진짜 춤 피드백이 됐어요. 좌표를 정리하고, 의미로 바꾸고, DTW로 정렬하고, 점수를 내고, 통역하고, 영상으로 보여준다. 이 전체 그림이 머리에 있어야 <b>다음 파트의 '함정'</b>이 왜 무서운지 이해됩니다.</aside>
+</section>
+
+<!-- ============================ PART 3 — 함정과 개선 ============================ -->
+
+<!-- S28 · 함정 지도 -->
+<section class="slide hero">
+  <div class="topbar"><span class="part" style="color:var(--magenta)"><b>PART 3</b> · 함정과 개선</span><span class="pg">28 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow m reveal"><span class="dot"></span>악마는 디테일에 있다</span>
+    <h2 class="reveal">우리 파이프라인의 <span class="accent m">5개 폭탄</span></h2>
+    <div class="reveal" style="margin:clamp(.7rem,2vh,1.3rem) 0;overflow-x:auto">
+      <div style="display:flex;align-items:flex-start;gap:.35rem;min-width:min-content;font-family:var(--mono);font-size:clamp(.58rem,1.1vw,.78rem)">
+        <span class="flow bomb">포즈 추출<b>①</b></span><span class="arr">→</span>
+        <span class="flow">정규화</span><span class="arr">→</span>
+        <span class="flow">운동학<b class="b5">⑤</b></span><span class="arr">→</span>
+        <span class="flow">미러</span><span class="arr">→</span>
+        <span class="flow">여백 트림</span><span class="arr">→</span>
+        <span class="flow bomb">DTW<b>②③</b></span><span class="arr">→</span>
+        <span class="flow bomb">점수·클립<b>④</b></span>
+      </div>
+    </div>
+    <ul class="bullets reveal" style="max-width:760px">
+      <li><b class="m">①</b> 포즈 추출 — visibility 필터링 부재 <span class="m">⭐⭐⭐⭐⭐</span></li>
+      <li><b class="m">②</b> 표준 DTW — penalty 없는 자유 경로 → 뼈대 튐 &nbsp;<b class="m">③</b> 경로/거리 혼동</li>
+      <li><b class="m">④</b> lag 평균 평행이동 → 타이밍 클립 거짓 &nbsp;<b class="m">⑤</b> 그루브/파워 DTW 후 계산</li>
+    </ul>
+    <div class="callout warn reveal" style="margin-top:.8em"><span class="tag">공통 교훈</span><b>전처리가 부정확하면 뒤가 전부 오염된다.</b></div>
+  </div>
+  <aside class="notes">이제 우리 코드 차례예요. 파이프라인에 폭탄이 다섯 개 숨어 있어요. 하나씩 터뜨려보면서 '왜 문제인지'와 '어떻게 고칠지'를 봅니다. 미리 말하면, <b>절반 이상이 'DTW에 들어가기 전 입력이 더럽다'</b>는 문제예요.</aside>
+</section>
+<style>.flow.bomb{border-color:var(--magenta);color:var(--text)}.flow b{color:var(--magenta);margin-left:.4em}.flow .b5{color:var(--amber)}</style>
+
+<!-- S29 · 함정 1 visibility -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--magenta)"><b>PART 3</b> · 함정 ①</span><span class="pg">29 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow m reveal"><span class="dot"></span>함정 ① · ⭐⭐⭐⭐⭐</span>
+      <h2 class="reveal">쓰레기 입력 → <span class="accent m">쓰레기 출력</span></h2>
+      <ul class="bullets reveal">
+        <li>MediaPipe는 관절마다 <b>visibility(신뢰도)</b>를 준다 — 그런데 <b class="m">안 쓴다</b></li>
+        <li>가려진/흐릿한 관절의 <b>엉터리 좌표</b>가 그대로 운동학·DTW로 유입</li>
+        <li>이후 <b class="m">모든 수치가 오염</b>. "Garbage In, Garbage Out."</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 220 200" style="max-width:min(36vw,260px);margin:0 auto" aria-label="가려진 관절 튐">
+        <g stroke="var(--cyan)" stroke-width="2.5" fill="var(--cyan)"><circle cx="100" cy="40" r="6"/><line x1="100" y1="46" x2="100" y2="110"/><line x1="100" y1="60" x2="70" y2="95"/></g>
+        <line x1="100" y1="60" x2="165" y2="130" stroke="var(--magenta)" stroke-width="2.5" stroke-dasharray="5 4"/>
+        <circle cx="165" cy="130" r="8" fill="none" stroke="var(--magenta)" stroke-width="2"/>
+        <line x1="158" y1="123" x2="172" y2="137" stroke="var(--magenta)" stroke-width="2"/><line x1="172" y1="123" x2="158" y2="137" stroke="var(--magenta)" stroke-width="2"/>
+        <g stroke="var(--cyan)" stroke-width="2.5" fill="var(--cyan)"><line x1="100" y1="110" x2="82" y2="165"/><line x1="100" y1="110" x2="118" y2="165"/></g>
+        <rect x="120" y="100" width="86" height="20" rx="4" fill="rgba(255,45,149,.15)"/>
+        <text x="163" y="114" fill="var(--magenta)" font-size="11" text-anchor="middle" font-family="var(--mono)">vis 0.2 → 튐</text>
+      </svg>
+      <p class="cap">신뢰도 낮은 손목이 엉뚱한 곳으로</p>
+    </div>
+  </div>
+  <aside class="notes">가장 중요한 함정이에요. MediaPipe가 '이 관절 자신 없어요(visibility 0.2)'라고 알려주는데, 우리는 그걸 무시하고 그 엉터리 좌표를 그대로 써요. <b>더러운 입력이 들어가면 아무리 DTW가 좋아도 결과가 더러워집니다.</b> 알고리즘이 아니라 '데이터 위생' 문제예요.</aside>
+</section>
+
+<!-- S30 · 개선 1 게이팅 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 개선 ①</span><span class="pg">30 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>개선 ①</span>
+      <h2 class="reveal">신뢰도 <span class="accent">게이팅</span></h2>
+      <ul class="bullets reveal">
+        <li><b>visibility threshold</b>(예: 0.7) 도입</li>
+        <li>임계 미만은 <b class="c">제외</b>, 짧은 결손은 <b class="c">보간</b></li>
+        <li>DTW 비용에 양쪽 신뢰도의 <b>최소값을 가중치</b>로</li>
+      </ul>
+      <div class="callout reveal" style="margin-top:.8em"><span class="tag">EFFECT</span>깨끗한 신호만 DTW로 → 자세·그루브·파워 <b>모두 안정</b></div>
+    </div>
+    <div class="reveal">
+      <div class="code"><span class="c"># visibility 게이팅 (전처리)</span>
+<span class="k">for</span> j <span class="k">in</span> <span class="fn">joints</span>:
+    <span class="k">if</span> j.visibility &lt; <span class="n">0.7</span>:
+        j = <span class="fn">interpolate</span>(j)   <span class="c"># 짧은 결손</span>
+        <span class="c"># 길면 제외</span>
+<span class="c"># DTW 비용: 신뢰도 낮으면 영향 ↓</span>
+w = <span class="fn">min</span>(ref_conf, tgt_conf)</div>
+    </div>
+  </div>
+  <aside class="notes">해법은 간단해요. <b>'신뢰도 0.7 미만은 안 믿는다'는 문지기</b>를 세우는 거예요. 잠깐 가려진 거면 앞뒤로 이어 메우고(보간), 계속 안 보이면 그 관절은 빼요. DTW에서도 자신 없는 관절은 영향력을 줄이고요. 이거 하나만 해도 뒤쪽 점수들이 눈에 띄게 안정됩니다.</aside>
+</section>
+
+<!-- S31 · 함정 2 자유 경로 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--magenta)"><b>PART 3</b> · 함정 ②</span><span class="pg">31 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow m reveal"><span class="dot"></span>함정 ② · ⭐⭐⭐⭐⭐</span>
+      <h2 class="reveal">표준 DTW의 <span class="accent m">자유로운 경로</span></h2>
+      <ul class="bullets reveal">
+        <li>표준 DTW는 경로 모양에 <b class="m">페널티가 없다</b> → 극단적 휨 허용</li>
+        <li><b>프레임 끊김</b>: 한 장면에 여러 장면을 붙여 재생이 뚝뚝</li>
+        <li><b class="m">뼈대 튐(jitter)</b>: 경로 오류 → 이후 모든 수치 오염</li>
+      </ul>
+      <div class="callout warn reveal" style="margin-top:.8em"><span class="tag">WHY</span>"가장 싼 길"만 찾을 뿐, <b>"자연스러운 길"</b>은 고려 안 함</div>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 200 200" style="max-width:min(34vw,240px);margin:0 auto" aria-label="one-to-many 매핑">
+        <rect x="20" y="20" width="160" height="160" fill="none" stroke="var(--line)"/>
+        <path fill="none" stroke="var(--magenta)" stroke-width="3.5" stroke-linecap="round" d="M30,170 L45,155 L130,155 L145,90 L160,75 L170,30"/>
+        <rect x="45" y="148" width="85" height="14" rx="3" fill="rgba(255,45,149,.12)"/>
+        <text x="88" y="200" fill="var(--magenta)" font-size="10" text-anchor="middle" font-family="var(--mono)">한 행에 여러 칸 (one-to-many)</text>
+      </svg>
+      <p class="cap">수평으로 길게 늘어진 경로 = 끊김·튐</p>
+    </div>
+  </div>
+  <aside class="notes">표준 DTW는 비용만 싸면 아무리 이상하게 휘어도 괜찮다고 봐요. 그래서 정답 한 프레임에 학생 30프레임이 매달리는 일이 생기죠. 그러면 재생이 끊기고, 심하면 뼈대가 튀어요. <b>뼈대가 한 번 튀면 그 프레임의 속도·각도가 다 엉터리</b>가 되니까 치명적입니다.</aside>
+</section>
+
+<!-- S32 · 개선 2a band -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 개선 ②-a</span><span class="pg">32 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>개선 ②-a</span>
+      <h2 class="reveal">Sakoe-Chiba <span class="accent">Band</span></h2>
+      <ul class="bullets reveal">
+        <li>경로가 대각선에서 <b>폭 r 이상 못 벗어나게</b> 제한</li>
+        <li><span class="kbd">|i − j| ≤ r</span> — 너무 먼 짝은 아예 금지</li>
+        <li>극단적 휨 차단 + <b class="c">계산량 O(n·r)로 감소</b></li>
+        <li>주의: r이 너무 좁으면 정상 속도 차이도 못 흡수 → 튜닝</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 200 200" style="max-width:min(34vw,250px);margin:0 auto" aria-label="Sakoe-Chiba band">
+        <rect x="20" y="20" width="160" height="160" fill="var(--surface2)"/>
+        <path d="M20,180 L20,120 L120,20 L180,20 L180,80 L80,180 Z" fill="rgba(34,211,238,.12)" stroke="var(--cyan)" stroke-dasharray="4 3"/>
+        <line x1="20" y1="180" x2="180" y2="20" stroke="var(--cyan)" stroke-width="2.5"/>
+        <text x="135" y="160" fill="var(--dim)" font-size="11" font-family="var(--mono)">band</text>
+        <text x="100" y="196" fill="var(--cyan)" font-size="10" text-anchor="middle" font-family="var(--mono)">대각선 ±r 안에서만 탐색</text>
+      </svg>
+      <p class="cap">울타리 치기 — 도망 못 가게</p>
+    </div>
+  </div>
+  <aside class="notes">첫 해법은 <b>'울타리 치기'</b>예요. 경로가 대각선에서 너무 멀리 도망 못 가게 띠 안에 가두는 거죠. 정답 5번이 학생 50번이랑 짝이 되는 말도 안 되는 일을 막아요. 보너스로 표의 일부만 계산하니 빨라져요. 다만 띠를 너무 좁히면 정상 속도 차이도 못 봐주니 적당히.</aside>
+</section>
+
+<!-- S33 · 개선 2b weighted -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 개선 ②-b</span><span class="pg">33 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>개선 ②-b</span>
+      <h2 class="reveal">Weighted / <span class="accent">Step-pattern</span></h2>
+      <ul class="bullets reveal">
+        <li>가로/세로 이동(시간 비틀기)에 <b class="m">추가 비용(페널티)</b></li>
+        <li>대각선은 싸고 옆걸음은 비싸게 → 경로가 <b class="c">대각선 선호</b></li>
+        <li>step pattern 조정으로 과한 휨 억제</li>
+      </ul>
+      <div class="callout reveal" style="margin-top:.8em"><span class="tag">RESULT</span>"싼 길" 아니라 <b>"싸고 자연스러운 길"</b> → 매끈한 정렬</div>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 200 180" style="max-width:min(34vw,250px);margin:0 auto" aria-label="가중치">
+        <rect x="70" y="20" width="56" height="56" rx="6" fill="rgba(255,45,149,.15)" stroke="var(--magenta)"/>
+        <text x="98" y="53" fill="var(--text)" font-size="12" text-anchor="middle" font-family="var(--mono)">i,j</text>
+        <rect x="70" y="100" width="56" height="56" rx="6" fill="rgba(34,211,238,.1)" stroke="var(--cyan)"/>
+        <line x1="98" y1="100" x2="98" y2="82" stroke="var(--cyan)" stroke-width="2.5" marker-end="url(#ar5c)"/>
+        <text x="108" y="94" fill="var(--cyan)" font-size="11" font-family="var(--mono)">×1</text>
+        <line x1="35" y1="120" x2="64" y2="80" stroke="var(--magenta)" stroke-width="2" marker-end="url(#ar5m)"/>
+        <text x="20" y="120" fill="var(--magenta)" font-size="11" font-family="var(--mono)">+벌금</text>
+        <defs><marker id="ar5c" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--cyan)"/></marker><marker id="ar5m" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--magenta)"/></marker></defs>
+      </svg>
+      <p class="cap">옆으로 새면 벌금 → 똑바로 유도</p>
+    </div>
+  </div>
+  <aside class="notes">두 번째 해법은 <b>'벌금 제도'</b>예요. 옆으로 새는(시간 비트는) 움직임에 벌금을 매기면, DTW가 웬만하면 대각선으로 똑바로 가려 하죠. 꼭 필요할 때만 시간을 비틀고요. 울타리(band)가 물리적 제한이라면, <b>벌금(weight)은 경제적 유도</b>예요. 둘을 같이 쓰면 더 좋습니다.</aside>
+</section>
+
+<!-- S34 · 개선 2c asymmetric -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 개선 ②-c</span><span class="pg">34 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>개선 ②-c · 고급</span>
+    <h2 class="reveal">Asymmetric DTW — <span class="accent">학생 기준</span> 정렬</h2>
+    <p class="body reveal" style="margin:.2em 0 .6em">학생의 <b>모든 프레임을 한 번씩</b> 채점(균등), 정답은 일부 skip 허용.</p>
+    <div class="reveal t-wrap">
+      <table>
+        <tr><th>측면</th><th>표준 (대칭)</th><th>Asymmetric</th></tr>
+        <tr><td>채점 단위</td><td>경로 쌍(불균등)</td><td><span class="good">학생 프레임(균등) ✅</span></td></tr>
+        <tr><td>군더더기 동작</td><td>잘 잡음</td><td>잘 잡음</td></tr>
+        <tr><td><b>동작 누락</b></td><td><span class="good">잘 잡음 ✅</span></td><td><span class="bad">못 잡음 ⚠️</span></td></tr>
+        <tr><td>자세 오차</td><td>보수적</td><td><span class="warn">band 좁아야 신뢰</span></td></tr>
+      </table>
+    </div>
+    <div class="callout warn reveal" style="margin-top:.7em"><span class="tag">적용 판단</span>같은 안무·비슷한 길이·시작끝 정렬 전제면 이점 큼. <b>누락 평가가 중요하면 주의.</b></div>
+  </div>
+  <aside class="notes">세 번째는 좀 고급이에요. '학생 프레임을 기준으로 한 번씩 공정하게 채점하자'는 거죠. 대신 정답 쪽 일부를 건너뛸 수 있어서, <b>학생이 안무를 통째로 빼먹어도 못 잡는 약점</b>이 생겨요. 그래서 '같은 춤을 끝까지 따라 췄다'가 전제일 때만 써야 해요. 만능이 아니라 <b>트레이드오프</b>가 있다는 걸 아는 게 중요합니다.</aside>
+</section>
+
+<!-- S35 · 함정 3 경로/거리 혼동 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--magenta)"><b>PART 3</b> · 함정 ③</span><span class="pg">35 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow m reveal"><span class="dot"></span>함정 ③</span>
+      <h2 class="reveal">경로 vs 거리 <span class="accent m">혼동</span></h2>
+      <ul class="bullets reveal">
+        <li>코드에서 실수로 섞으면: 자세 오류(거리 큼)가 <b class="m">"박자 늦음"으로 둔갑</b></li>
+        <li>점검: timing 입력이 <b class="c">오직 경로(잔차)</b>인지 코드로 확인</li>
+        <li>DTW 정렬 입력은 <b>정규화 좌표(x,y)</b> — 운동학 지표 넣지 말 것</li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 240 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="배선도">
+        <rect x="10" y="20" width="70" height="30" rx="6" fill="rgba(34,211,238,.1)" stroke="var(--cyan)"/><text x="45" y="40" fill="var(--cyan)" font-size="11" text-anchor="middle" font-family="var(--mono)">경로</text>
+        <rect x="10" y="120" width="70" height="30" rx="6" fill="rgba(255,45,149,.1)" stroke="var(--magenta)"/><text x="45" y="140" fill="var(--magenta)" font-size="11" text-anchor="middle" font-family="var(--mono)">거리</text>
+        <rect x="160" y="20" width="70" height="30" rx="6" fill="var(--surface2)" stroke="var(--line)"/><text x="195" y="40" fill="var(--text)" font-size="11" text-anchor="middle" font-family="var(--mono)">타이밍</text>
+        <rect x="160" y="120" width="70" height="30" rx="6" fill="var(--surface2)" stroke="var(--line)"/><text x="195" y="140" fill="var(--text)" font-size="11" text-anchor="middle" font-family="var(--mono)">자세</text>
+        <line x1="80" y1="35" x2="160" y2="35" stroke="var(--cyan)" stroke-width="2.5"/>
+        <line x1="80" y1="135" x2="160" y2="135" stroke="var(--magenta)" stroke-width="2.5"/>
+        <line x1="80" y1="128" x2="160" y2="48" stroke="var(--magenta)" stroke-width="2" stroke-dasharray="5 4" opacity=".7"/>
+        <text x="120" y="92" fill="var(--magenta)" font-size="13" text-anchor="middle">✕</text>
+      </svg>
+      <p class="cap">거리가 타이밍으로 새면 거짓 피드백</p>
+    </div>
+  </div>
+  <aside class="notes">세 번째 폭탄은 개념은 쉬운데 코드에서 자주 터져요. 타이밍 점수에 실수로 '거리'를 넣으면, 자세가 틀린 학생한테 <b>'박자가 늦다'고 엉뚱한 피드백</b>을 줘요. 한 번 코드를 열어서 타이밍은 경로만, 자세는 거리만 쓰는지 확인해보세요. 이거 섞이면 사용자가 영문도 모르고 박자 연습만 하게 됩니다.</aside>
+</section>
+
+<!-- S36 · 함정 4 lag 평균 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--magenta)"><b>PART 3</b> · 함정 ④</span><span class="pg">36 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow m reveal"><span class="dot"></span>함정 ④</span>
+      <h2 class="reveal">lag 평균 평행이동의 <span class="accent m">거짓말</span></h2>
+      <ul class="bullets reveal">
+        <li>타이밍 클립이 <b>평균 lag 하나</b>로 영상 전체를 통째로 이동</li>
+        <li>"처음엔 맞다 중간에 늦는" <b class="m">국소 변화가 평균에 묻혀</b> 사라짐</li>
+        <li>개선: 평균이 아니라 <b class="c">경로 따라 프레임별 동적 오프셋</b> + 선형 보간</li>
+      </ul>
+    </div>
+    <div class="reveal">
+      <div class="code"><span class="c"># ❌ 평균 lag 하나로 평행이동</span>
+offset = <span class="fn">round</span>(<span class="fn">mean</span>(lags))
+<span class="c"># → 중간 어긋남이 사라져 거짓 시각화</span>
+
+<span class="c"># ✅ 경로 따라 프레임별 동적 오프셋</span>
+<span class="k">for</span> (ref_i, tgt_j) <span class="k">in</span> <span class="fn">path</span>:
+    <span class="fn">render</span>(ref_i, tgt_j)  <span class="c"># +선형보간</span></div>
+      <p class="cap" style="text-align:left;margin-top:.5em">동작 클립은 평균도 OK · 타이밍 클립은 경로 필수</p>
+    </div>
+  </div>
+  <aside class="notes">네 번째. 타이밍 클립을 만들 때 평균 한 값으로 영상을 통째로 밀어요. 그러면 중간에 늦었다 빨랐다 하는 게 평균에 묻혀서, <b>클립에선 박자가 맞는 것처럼 보여요. 거짓말하는 클립</b>이죠. DTW 경로는 프레임마다 '몇 칸 어긋났는지'를 다 알고 있으니, 그걸 그대로 쓰면 실제 어긋남이 눈에 보입니다.</aside>
+</section>
+
+<!-- S37 · 함정 5 그루브/파워 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--magenta)"><b>PART 3</b> · 함정 ⑤</span><span class="pg">37 / 42</span></div>
+  <div class="slide-content two-col">
+    <div>
+      <span class="eyebrow m reveal"><span class="dot"></span>함정 ⑤</span>
+      <h2 class="reveal">그루브/파워를 <span class="accent m">DTW 후</span> 계산</h2>
+      <ul class="bullets reveal">
+        <li>DTW가 시간을 늘이고 줄이며 <b class="m">원본의 속도·스냅을 손상</b></li>
+        <li>증상: "영상은 멀쩡한데 <b>그루브/파워 수치만 나쁨</b>"</li>
+        <li>개선: 세기·리듬 지표는 <b class="c">DTW 보정 전 원본</b>에서 계산</li>
+        <li>+ 그루브/파워의 <b>수학적 정의 문서화·검증</b></li>
+      </ul>
+    </div>
+    <div class="reveal center">
+      <svg class="dia" viewBox="0 0 260 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="스냅 손실">
+        <path fill="none" stroke="var(--cyan)" stroke-width="2.5" d="M10,60 L70,60 L72,25 L74,60 L130,60"/>
+        <text x="10" y="18" fill="var(--cyan)" font-size="10" font-family="var(--mono)">원본 (날카로운 스냅)</text>
+        <line x1="135" y1="60" x2="160" y2="120" stroke="var(--dim)" stroke-width="1.5" marker-end="url(#ar6)"/>
+        <text x="120" y="100" fill="var(--dim)" font-size="9" font-family="var(--mono)">DTW</text>
+        <defs><marker id="ar6" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="var(--dim)"/></marker></defs>
+        <path fill="none" stroke="var(--magenta)" stroke-width="2.5" d="M10,150 L60,150 Q80,135 100,150 L150,150"/>
+        <text x="10" y="172" fill="var(--magenta)" font-size="10" font-family="var(--mono)">보정 후 (뭉개진 스냅)</text>
+      </svg>
+      <p class="cap">시간을 늘이면 힘이 사라진다</p>
+    </div>
+  </div>
+  <aside class="notes">마지막 폭탄. 그루브랑 파워를 DTW로 시간을 비튼 다음에 계산하고 있어요. 그런데 <b>DTW가 시간을 늘이면 날카롭던 스냅이 뭉개져요. 원본의 힘이 사라지는</b> 거죠. 그래서 '영상은 멀쩡한데 파워 점수만 이상한' 현상이 생겼던 거예요. 세기·리듬은 원본에서 재고, DTW는 '같은 순간인지' 맞추는 데만 쓰는 게 맞습니다.</aside>
+</section>
+
+<!-- S38 · 개선 우선순위 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 정리</span><span class="pg">38 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>무엇부터?</span>
+    <h2 class="reveal">개선 <span class="accent">우선순위</span></h2>
+    <div class="reveal t-wrap" style="margin-top:clamp(.6rem,2vh,1.1rem)">
+      <table>
+        <tr><th>순위</th><th>개선</th><th>임팩트</th><th>난이도</th></tr>
+        <tr><td><b class="ok">1</b></td><td>visibility 게이팅</td><td><span class="m">⭐⭐⭐⭐⭐</span></td><td><span class="good">낮음</span></td></tr>
+        <tr><td><b class="ok">2</b></td><td>Penalty DTW (band+weight)</td><td><span class="m">⭐⭐⭐⭐⭐</span></td><td><span class="warn">중간</span></td></tr>
+        <tr><td><b class="ok">3</b></td><td>경로/거리 분리 점검</td><td>⭐⭐⭐⭐</td><td><span class="good">낮음</span></td></tr>
+        <tr><td><b class="ok">4</b></td><td>타이밍 클립 경로 기반</td><td>⭐⭐⭐</td><td><span class="warn">중간</span></td></tr>
+        <tr><td><b class="ok">5</b></td><td>그루브/파워 원본 계산 + 정의 검증</td><td>⭐⭐⭐⭐</td><td><span class="warn">중간</span></td></tr>
+      </table>
+    </div>
+    <div class="callout reveal" style="margin-top:.7em"><span class="tag">원칙</span><b>싸고 임팩트 큰 것(1·3)부터</b>, 그다음 구조 개선(2·5)</div>
+  </div>
+  <aside class="notes">다 중요하지만 순서가 있어요. <b>visibility 필터링이랑 경로/거리 점검은 품이 적게 들면서 효과가 커요.</b> 이걸 먼저 하고, 그다음 penalty DTW랑 그루브/파워 재정의 같은 구조적인 걸 하는 게 좋아요. '싸고 효과 큰 것부터'가 원칙입니다.</aside>
+</section>
+
+<!-- S39 · 검증 문화 -->
+<section class="slide">
+  <div class="topbar"><span class="part" style="color:var(--cyan)"><b>PART 3</b> · 검증</span><span class="pg">39 / 42</span></div>
+  <div class="slide-content two-col wide-r">
+    <div>
+      <span class="eyebrow reveal"><span class="dot"></span>검증 문화</span>
+      <h2 class="reveal">고쳤다 = <span class="accent">검증했다</span></h2>
+      <ul class="bullets reveal">
+        <li>같은 영상 2개 → 모든 ratio ≈ 1.0, 5종 점수 <b class="c">90+</b> (재현성)</li>
+        <li>느리게 춘 버전 → DTW가 흡수해 <b>동기화</b>되는가</li>
+        <li>앞뒤 여백 버전 → <b>트림</b>이 정상 작동하는가</li>
+        <li>필터/penalty 적용 <b>전후를 눈으로</b> 비교 (정성 평가)</li>
+      </ul>
+    </div>
+    <div class="reveal">
+      <div class="card cyan"><h3>✓ 데이터 전략</h3><p>깨끗한 데이터로 <b>먼저 파이프라인을 세우고</b>, 예외 입력은 <b class="c">촬영 가이드</b>로 사전 차단.</p></div>
+      <div class="card" style="margin-top:.6rem"><h3>🔁 재현성 도장</h3><p>같은 입력 → 같은 점수? <b class="good">통과</b>해야 신뢰할 수 있는 시스템.</p></div>
+    </div>
+  </div>
+  <aside class="notes">고쳤다는 건 <b>'검증했다'는 뜻</b>이어야 해요. 같은 영상을 두 번 넣으면 똑같은 점수가 나오는지, 느리게 춘 영상이 잘 정렬되는지 매번 확인하세요. 그리고 우리는 <b>깨끗한 입력으로 먼저 완성하고, 지저분한 입력은 촬영 가이드로 막는</b> 전략이라는 것도 기억하고요.</aside>
+</section>
+
+<!-- ============================ PART 4 — 정리 & 액션 ============================ -->
+
+<!-- S40 · 핵심 5 Takeaway -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 4</b> · 정리</span><span class="pg">40 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>핵심 5 Takeaway</span>
+    <h2 class="reveal">오늘 <span class="accent">가져갈 다섯</span> 가지</h2>
+    <ul class="bullets reveal" style="margin-top:clamp(.6rem,2vh,1.2rem);gap:clamp(.5rem,1.6vh,1.1rem)">
+      <li><b class="c">1</b>&nbsp;&nbsp;DTW = <b>시간을 늘였다 줄였다</b> 하며 정렬 (순서 보존, 속도만 조절)</li>
+      <li><b class="c">2</b>&nbsp;&nbsp;⭐ <b>경로 = 타이밍 / 거리 = 자세</b> — 절대 섞지 말 것</li>
+      <li><b class="c">3</b>&nbsp;&nbsp;좌표를 <b>정규화 → 운동학 지표</b>로 바꿔 '의미'를 비교 (각도·속도·저크)</li>
+      <li><b class="c">4</b>&nbsp;&nbsp;<b class="m">전처리(visibility)가 전부</b> — 더러운 입력은 모든 점수를 오염</li>
+      <li><b class="c">5</b>&nbsp;&nbsp;<b>표준 DTW는 함정</b> — band·weight로 자연스러운 경로를, 클립은 경로 기반으로</li>
+    </ul>
+  </div>
+  <aside class="notes">딱 다섯 개만 가져가세요. DTW는 시간 정렬, 경로와 거리는 다른 신호, 좌표는 의미로 바꿔 비교, 입력 위생이 제일 중요, 표준 DTW는 그냥 쓰면 위험. <b>이 다섯이 오늘의 전부</b>예요.</aside>
+</section>
+
+<!-- S41 · 멘티 액션 아이템 -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 4</b> · 정리</span><span class="pg">41 / 42</span></div>
+  <div class="slide-content">
+    <span class="eyebrow m reveal"><span class="dot"></span>다음 주까지</span>
+    <h2 class="reveal">멘티 <span class="accent m">액션 아이템</span></h2>
+    <div class="grid-2 reveal" style="margin-top:clamp(.6rem,2vh,1.2rem)">
+      <ul class="bullets" style="gap:clamp(.45rem,1.4vh,.9rem)">
+        <li><b class="c">☐</b> visibility 필터링(0.7) + 전후 시각화</li>
+        <li><b class="c">☐</b> timing 입력 점검 — 경로(잔차)만 쓰나</li>
+        <li><b class="c">☐</b> Penalty DTW 프로토타입 (band+weight, 표준과 비교)</li>
+      </ul>
+      <ul class="bullets" style="gap:clamp(.45rem,1.4vh,.9rem)">
+        <li><b class="m">☐</b> 타이밍 클립 — 평균 lag → 경로 기반 오프셋</li>
+        <li><b class="m">☐</b> 그루브/파워 — 원본 계산 + 수학 정의 문서화</li>
+        <li><b class="m">☐</b> Asymmetric DTW — 같은 안무 전제에서 실험 비교</li>
+      </ul>
+    </div>
+    <div class="callout reveal" style="margin-top:.8em"><span class="tag">TIP</span>새 DTW를 만들 땐 기존 걸 지우지 말고 <b>나란히 비교</b>할 것.</div>
+  </div>
+  <aside class="notes">다음 주까지 이걸 나눠서 해봅시다. 1번이랑 2번은 오늘 당장 가능하고, 나머지는 실험으로 비교해보면 돼요. 특히 <b>새 DTW를 만들 땐 기존 걸 지우지 말고 나란히 비교</b>하는 게 중요해요.</aside>
+</section>
+
+<!-- S42 · 마무리 -->
+<section class="slide hero">
+  <div class="topbar"><span class="part"><b>PART 4</b> · 마무리</span><span class="pg">42 / 42</span></div>
+  <div class="slide-content center">
+    <span class="eyebrow reveal"><span class="dot"></span>Q &amp; A · 토론</span>
+    <h2 class="reveal" style="font-size:clamp(1.7rem,4.2vw,3rem)">이제 <span class="grad">답할 수 있다</span></h2>
+    <div class="grid-3 reveal" style="width:min(96vw,1000px);margin:clamp(.9rem,2.5vh,1.6rem) 0">
+      <div class="card cyan"><span class="ico">🔁→✅</span><p>같은 영상 → 같은 점수? <b>코드 결정론 + visibility</b></p></div>
+      <div class="card mag"><span class="ico">⏱️→✅</span><p>타이밍 vs 자세? <b>경로/거리 분리</b></p></div>
+      <div class="card cyan"><span class="ico">🎬→✅</span><p>클립 박자, 진짜? <b>경로 기반 동적 오프셋</b></p></div>
+    </div>
+    <p class="lead reveal">남은 건 <b>우리 데이터에 맞게 튜닝</b> — band 폭 r은? 그루브·파워의 우리만의 정의는?</p>
+  </div>
+  <aside class="notes">처음에 던졌던 세 질문, 이제 '어디를 고치면 자신 있게 네라고 답할 수 있는지' 알게 됐죠. 남은 건 <b>우리 데이터에 맞게 숫자를 튜닝</b>하는 거예요. 질문 받을게요. 특히 band 폭이나 그루브·파워 정의는 같이 정해봅시다.</aside>
+</section>
+
+
+<script>
+/* =========================================================
+   다이어그램 생성 (비용 행렬 / 경로 / 미니 격자)
+   ========================================================= */
+function buildHeat(id,N,pathDiag){
+  const svg=document.getElementById(id);if(!svg)return;const S=240/N;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const d=Math.abs(i-(N-1-j)); // 반대각선 거리(좌하→우상이 저비용)
+    const t=Math.min(1,d/(N*0.6));
+    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',j*S+1);r.setAttribute('y',i*S+1);r.setAttribute('width',S-2);r.setAttribute('height',S-2);r.setAttribute('rx',2);
+    // 저비용=시안톤(어둡고 파랑), 고비용=옅은 회색
+    const cyan=[34,211,238];
+    r.setAttribute('fill',`rgba(${cyan[0]},${cyan[1]},${cyan[2]},${0.42*(1-t)+0.03})`);
+    r.setAttribute('stroke','rgba(255,255,255,.05)');
+    svg.appendChild(r);
+  }
+  if(pathDiag){
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    // 좌하단 → 우상단 계단 경로
+    let dd=`M${S/2},${240-S/2}`;let i=N-1,j=0;
+    while(i>0||j<N-1){ if(i>0&&j<N-1){i--;j++;} else if(j<N-1){j++;} else {i--;}
+      dd+=` L${j*S+S/2},${i*S+S/2}`;}
+    p.setAttribute('d',dd);p.setAttribute('class','draw');p.setAttribute('style','--len:700');
+    p.setAttribute('fill','none');p.setAttribute('stroke','var(--magenta)');p.setAttribute('stroke-width','4');
+    p.setAttribute('stroke-linecap','round');p.setAttribute('stroke-linejoin','round');
+    p.setAttribute('filter','drop-shadow(0 0 6px var(--magenta-glow))');
+    svg.appendChild(p);
+  }
+}
+buildHeat('costHeat',8,false);
+buildHeat('pathGrid',8,true);
+// 미니 격자 (S14) 4x3
+(function(){const svg=document.getElementById('miniCells');if(!svg)return;
+  const cols=4,rows=3,W=50,H=50,ox=10,oy=20;
+  const vals=[[0,0,1,2],[1,1,0,1],[2,2,1,0]];
+  for(let i=0;i<rows;i++)for(let j=0;j<cols;j++){
+    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',ox+j*W);r.setAttribute('y',oy+i*H);r.setAttribute('width',W-4);r.setAttribute('height',H-4);r.setAttribute('rx',4);
+    const zero=vals[i][j]===0;
+    r.setAttribute('fill',zero?'rgba(34,211,238,.16)':'var(--surface2)');
+    r.setAttribute('stroke',zero?'var(--cyan)':'var(--line)');svg.appendChild(r);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',ox+j*W+(W-4)/2);t.setAttribute('y',oy+i*H+(H-4)/2+4);t.setAttribute('text-anchor','middle');
+    t.setAttribute('font-family','var(--mono)');t.setAttribute('font-size','13');t.setAttribute('fill',zero?'var(--cyan)':'var(--dim)');
+    t.textContent=vals[i][j];svg.appendChild(t);
+  }
+})();
+
+/* =========================================================
+   SLIDE PRESENTATION CONTROLLER
+   ========================================================= */
+class SlidePresentation{
+  constructor(){
+    this.slides=[...document.querySelectorAll('.slide')];
+    this.current=0;
+    this.navDots=document.getElementById('navDots');
+    this.progress=document.getElementById('progressBar');
+    this.hint=document.getElementById('kbdHint');
+    this.buildDots();this.observe();this.keys();this.touch();
+    setTimeout(()=>this.hint&&(this.hint.style.opacity='0'),5000);
+  }
+  buildDots(){ // 중복 방지를 위해 항상 비우고 생성
+    this.navDots.innerHTML='';
+    this.slides.forEach((s,i)=>{const b=document.createElement('button');
+      b.setAttribute('aria-label',(i+1)+'번 슬라이드');
+      b.onclick=()=>this.go(i);this.navDots.appendChild(b);});
+    this.dots=[...this.navDots.children];
+  }
+  observe(){
+    const io=new IntersectionObserver((es)=>{es.forEach(e=>{
+      if(e.isIntersecting){e.target.classList.add('visible');
+        this.current=this.slides.indexOf(e.target);this.sync();}
+    })},{threshold:.55});
+    this.slides.forEach(s=>io.observe(s));
+  }
+  sync(){
+    if(this.progress)this.progress.style.width=((this.current+1)/this.slides.length*100)+'%';
+    if(this.dots)this.dots.forEach((d,i)=>d.classList.toggle('active',i===this.current));
+  }
+  go(i){i=Math.max(0,Math.min(this.slides.length-1,i));this.slides[i].scrollIntoView({behavior:'smooth'});}
+  keys(){document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();this.go(this.current+1);}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();this.go(this.current-1);}
+    else if(e.key==='Home'){e.preventDefault();this.go(0);}
+    else if(e.key==='End'){e.preventDefault();this.go(this.slides.length-1);}
+    else if(e.key==='n'||e.key==='N'){document.body.classList.toggle('show-notes');}
+    else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
+  });}
+  touch(){let y0=null;document.addEventListener('touchstart',e=>y0=e.touches[0].clientY,{passive:true});
+    document.addEventListener('touchend',e=>{if(y0===null)return;const dy=y0-e.changedTouches[0].clientY;
+      if(Math.abs(dy)>60)this.go(this.current+(dy>0?1:-1));y0=null;},{passive:true});}
+}
+new SlidePresentation();
+</script>
+</body>
+</html>
