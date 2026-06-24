@@ -651,17 +651,18 @@ body.show-notes .slide.visible .notes{display:block}
       <h2 class="reveal">스케일 — <span class="accent">체격 차이</span> 지우기</h2>
       <ul class="bullets reveal">
         <li>world는 골반 원점이지만 <b class="m">미터 실측</b> → 키 큰 사람은 값이 그대로 큼</li>
-        <li>모든 좌표를 <b>torso 길이(어깨~골반)</b>로 나눠 체격 제거 <span class="dim">(영상당 1값 고정)</span></li>
+        <li><b class="c">torso = 어깨 중점 ↔ 골반 중점 거리(3D)</b>를 체격의 '자'로 삼는다</li>
+        <li>모든 좌표를 torso로 나눔 <span class="dim">(영상당 중앙값 1개로 고정 → 노이즈↓)</span></li>
       </ul>
-      <div class="formula reveal" style="margin-top:.7em;font-size:clamp(.8rem,1.7vw,1.15rem)">관절″ = 관절′ <span class="c">÷ torso</span></div>
-      <div class="reveal t-wrap" style="margin-top:.7em">
+      <div class="formula reveal" style="margin-top:.55em;font-size:clamp(.68rem,1.45vw,1rem)">torso = ‖어깨중점 − 골반중점‖ &nbsp;→&nbsp; 관절″ = 관절′ <span class="c">÷ torso</span></div>
+      <div class="reveal t-wrap" style="margin-top:.55em">
         <table>
           <tr><th>차이</th><th>torso로 지워지나</th></tr>
           <tr><td>키 · 전체 체격</td><td><span class="good">✅ 됨</span></td></tr>
           <tr><td>팔 길이 개인 비율</td><td><span class="warn">⚠️ 완벽히는 아님</span></td></tr>
         </table>
       </div>
-      <p class="gloss reveal" style="margin-top:.5em">팔 길이 개인차는 곧 나올 <b class="c">각도</b>가 해결한다</p>
+      <p class="gloss reveal" style="margin-top:.45em">가정: <b>몸통 길이 ∝ 체격</b> (사람 몸은 대략 닮은꼴). 팔 길이 개인차는 <b class="c">각도</b>가 보완.</p>
     </div>
     <div class="reveal center">
       <svg class="dia" viewBox="0 0 280 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="스케일 정규화">
