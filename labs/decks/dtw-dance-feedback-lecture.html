@@ -590,19 +590,39 @@ body.show-notes .slide.visible .notes{display:block}
   <aside class="notes">춤을 비교한다는 건 결국 <b>'무엇을' 비교하느냐</b>의 문제예요. 그냥 화면 좌표를 비교하면 카메라가 조금만 움직여도 다 틀어져요. 그래서 위치를 정규화하고, 좌표를 '속도·각도·스냅' 같은 <b>춤의 언어</b>로 바꿔서 비교합니다.</aside>
 </section>
 
+<!-- S16b · 입력 좌표 선택 (pose_world_landmarks) -->
+<section class="slide">
+  <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">17 / 43</span></div>
+  <div class="slide-content">
+    <span class="eyebrow reveal"><span class="dot"></span>정규화 ⓪ · 입력 선택</span>
+    <h2 class="reveal">어떤 좌표를 <span class="accent">입력</span>으로 쓸까</h2>
+    <p class="body reveal" style="margin:.2em 0 .6em">MediaPipe는 좌표를 <b>두 종류</b>로 준다 — 무엇을 고르느냐로 정규화의 절반이 갈린다.</p>
+    <div class="reveal t-wrap">
+      <table>
+        <tr><th>출력</th><th>기준 (원점)</th><th>단위</th><th>위치 정규화</th></tr>
+        <tr><td><span class="kbd">pose_landmarks</span><br><span class="dim">이미지</span></td><td>화면 좌상단</td><td>0~1 (화면 비율)</td><td><span class="bad">❌ 직접 해야</span></td></tr>
+        <tr><td><span class="kbd">pose_world_landmarks</span><br><span class="dim">월드</span></td><td><span class="good">골반(엉덩이 중점)</span></td><td>미터 · 3D</td><td><span class="good">✅ 이미 됨</span></td></tr>
+      </table>
+    </div>
+    <div class="callout reveal" style="margin-top:.8em"><span class="tag">우리 선택</span>✅ <b class="c">pose_world_landmarks</b> — 골반 원점·미터 3D라 <b>화면 속 위치에 안 흔들린다</b>. <b class="m">pose_landmarks는 쓰지 않는다</b> (0~1은 '화면 대비'일 뿐).</div>
+  </div>
+  <aside class="notes">정규화에 들어가기 전, 가장 중요한 선택이에요. MediaPipe는 좌표를 두 종류로 줘요. 하나는 이미지 좌표(0~1)인데 '화면 어디에 찍혔나'라서 서 있는 위치가 그대로 섞여 있어요. 다른 하나가 world landmarks인데, <b>골반을 원점으로 한 미터 단위 3D</b>예요. 우리는 world를 씁니다. 그러면 '위치 정규화'가 공짜로 따라와요. pose_landmarks는 쓰지 마세요 — 화면 속 위치에 휘둘립니다.</aside>
+</section>
+
 <!-- S17 · 정규화 1 중심 이동 -->
 <section class="slide">
   <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">17 / 42</span></div>
   <div class="slide-content two-col wide-r">
     <div>
-      <span class="eyebrow reveal"><span class="dot"></span>정규화 ①</span>
-      <h2 class="reveal">중심 이동 — <span class="accent">화면 속 위치</span> 지우기</h2>
+      <span class="eyebrow reveal"><span class="dot"></span>정규화 ① · 위치</span>
+      <h2 class="reveal">중심 이동 — <span class="accent">골반을 원점</span>으로</h2>
       <ul class="bullets reveal">
-        <li>매 프레임 <b>골반 중심(양 엉덩이 중점)</b>을 원점(0,0)으로</li>
-        <li>효과: 화면 어디 서 있든 <b class="c">동일하게 비교</b></li>
+        <li><b class="c">world landmarks는 골반(엉덩이 중점)이 이미 원점</b> — 이 단계는 MediaPipe가 해준다</li>
+        <li>원리: 화면 어디 서 있든 골반을 0으로 맞추면 <b>같은 출발선</b></li>
+        <li><span class="dim">(만약 image landmarks를 썼다면 우리가 직접 빼야 함)</span></li>
       </ul>
-      <div class="formula reveal" style="margin-top:1em;font-size:clamp(.8rem,1.7vw,1.15rem)">관절′ = 관절 <span class="m">− 골반</span></div>
-      <p class="gloss reveal">모든 좌표에서 골반 좌표를 빼면, 골반이 항상 0</p>
+      <div class="formula reveal" style="margin-top:1em;font-size:clamp(.8rem,1.7vw,1.15rem)">관절′ = 관절 <span class="m">− 골반</span> &nbsp;<span class="dim">(world면 적용 완료)</span></div>
+      <p class="gloss reveal">위치(서 있는 자리)를 지운다 = 정규화의 첫 단계</p>
     </div>
     <div class="reveal center">
       <svg class="dia" viewBox="0 0 300 180" style="max-width:min(40vw,320px);margin:0 auto" aria-label="중심 이동">
@@ -627,14 +647,21 @@ body.show-notes .slide.visible .notes{display:block}
   <div class="topbar"><span class="part"><b>PART 2</b> · 댄스 특화</span><span class="pg">18 / 42</span></div>
   <div class="slide-content two-col">
     <div>
-      <span class="eyebrow reveal"><span class="dot"></span>정규화 ②</span>
+      <span class="eyebrow reveal"><span class="dot"></span>정규화 ② · 크기</span>
       <h2 class="reveal">스케일 — <span class="accent">체격 차이</span> 지우기</h2>
       <ul class="bullets reveal">
-        <li>모든 좌표를 <b>torso 길이(어깨~골반)</b>로 나눈다</li>
-        <li>영상당 <b class="c">평균 1개 값으로 고정</b> → 프레임마다 안 흔들리게</li>
-        <li>효과: 키·팔 길이 차이 제거. <span class="dim">(회전은 정면 가정으로 보정 안 함)</span></li>
+        <li>world는 골반 원점이지만 <b class="m">미터 실측</b> → 키 큰 사람은 값이 그대로 큼</li>
+        <li>모든 좌표를 <b>torso 길이(어깨~골반)</b>로 나눠 체격 제거 <span class="dim">(영상당 1값 고정)</span></li>
       </ul>
-      <div class="formula reveal" style="margin-top:1em;font-size:clamp(.8rem,1.7vw,1.15rem)">관절″ = 관절′ <span class="c">÷ torso</span></div>
+      <div class="formula reveal" style="margin-top:.7em;font-size:clamp(.8rem,1.7vw,1.15rem)">관절″ = 관절′ <span class="c">÷ torso</span></div>
+      <div class="reveal t-wrap" style="margin-top:.7em">
+        <table>
+          <tr><th>차이</th><th>torso로 지워지나</th></tr>
+          <tr><td>키 · 전체 체격</td><td><span class="good">✅ 됨</span></td></tr>
+          <tr><td>팔 길이 개인 비율</td><td><span class="warn">⚠️ 완벽히는 아님</span></td></tr>
+        </table>
+      </div>
+      <p class="gloss reveal" style="margin-top:.5em">팔 길이 개인차는 곧 나올 <b class="c">각도</b>가 해결한다</p>
     </div>
     <div class="reveal center">
       <svg class="dia" viewBox="0 0 280 180" style="max-width:min(40vw,300px);margin:0 auto" aria-label="스케일 정규화">
@@ -1321,7 +1348,10 @@ class SlidePresentation{
     this.navDots.innerHTML='';
     this.slides.forEach((s,i)=>{const b=document.createElement('button');
       b.setAttribute('aria-label',(i+1)+'번 슬라이드');
-      b.onclick=()=>this.go(i);this.navDots.appendChild(b);});
+      b.onclick=()=>this.go(i);this.navDots.appendChild(b);
+      // 페이지 번호 자동 매김 — 슬라이드 추가/삭제 시 번호가 알아서 갱신
+      const pg=s.querySelector('.pg');
+      if(pg)pg.textContent=String(i+1).padStart(2,'0')+' / '+this.slides.length;});
     this.dots=[...this.navDots.children];
   }
   observe(){
